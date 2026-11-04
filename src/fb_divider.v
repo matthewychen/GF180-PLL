@@ -1,8 +1,9 @@
+`timescale 1ns/1ps
 `default_nettype none
 
 // Feedback divider: divides the VCO clock by 8.
 // 80 MHz in, 10 MHz out, 50% duty cycle.
-// vco_clk must already be level-shifted to the 1.8 V digital domain.
+// vco_clk must already be level-shifted to digital supply level
 module fb_divider (
     input  wire vco_clk,  // from VCO, through level shifter
     input  wire rst_n,    // active-low reset (TT rst_n)
