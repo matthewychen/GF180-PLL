@@ -1,13 +1,13 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-// Feedback divider: divides the VCO clock by 8.
-// 80 MHz in, 10 MHz out, 50% duty cycle.
-// vco_clk must already be level-shifted to digital supply level
+// Purpose of this feedback divider is to divide the VCO clock by 8 to generate a feedback clock for the PLL (and output reference)
+// The input clock is 80 MHz, and the output clock is 10 MHz with a 50% duty cycle. 
+
 module fb_divider (
-    input  wire vco_clk,  // from VCO, through level shifter
-    input  wire rst_n,    // active-low reset (TT rst_n)
-    output wire fb_clk    // to BB-PFD and to uo_out[0]
+    input  wire vco_clk,  // clock from vco (80 MHz)
+    input  wire rst_n,    // active-low reset
+    output wire fb_clk    // output clock at 10MHz
 );
 
     reg [2:0] count;
