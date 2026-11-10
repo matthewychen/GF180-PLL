@@ -1,11 +1,11 @@
 # Tiny Tapeout project information
 project:
-  title:        ""      # Project title
-  author:       ""      # Your name
+  title:        "Bang-Bang Mixed-Signal PLL"      # Project title
+  author:       "Benjamin Dong, Gabe Hoh, Hugh Ding, Matthew Chen"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
+  description:  "Bang-bang PLL that multiplies a 10 MHz reference to 80 MHz using a digital PI loop filter, DAC and VCO"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
+  clock_hz:     10000000      # Clock frequency in Hz (or 0 if not applicable)
 
   # How many tiles your design occupies? A single tile is about 340x160 uM.
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 3x4 or 4x4
@@ -27,14 +27,14 @@ pinout:
   ui[1]: ""
   ui[2]: ""
   ui[3]: ""
-  ui[4]: ""
-  ui[5]: ""
-  ui[6]: ""
-  ui[7]: ""
+  ui[4]: "KP_SEL[0]"
+  ui[5]: "KP_SEL[1]"
+  ui[6]: "KI_SEL[0]"
+  ui[7]: "KI_SEL[1]"
 
   # Outputs
-  uo[0]: ""
-  uo[1]: ""
+  uo[0]: "CLK_OUT"
+  uo[1]: "LOCK"
   uo[2]: ""
   uo[3]: ""
   uo[4]: ""
