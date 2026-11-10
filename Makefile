@@ -9,7 +9,7 @@ else
 TB = ./test/tb_phase_detector.sv
 endif
 
-SRCS = $(TB) ./src/bbpd/phase_detector.v
+SRCS = $(TB) ./src/phase_detector.v
 
 all:
 	iverilog -g2012 -o tb.vvp $(SRCS)
