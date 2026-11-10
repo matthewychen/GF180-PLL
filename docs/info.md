@@ -28,7 +28,8 @@ A **lock detector** watches the EARLY stream. While the loop is acquiring freque
 3. Watch `uo_out[1]` (LOCK). It should go high within about 1000 reference cycles (100 µs).
 4. Once locked, `uo_out[0]` (CLK_OUT) is a 10 MHz clock that is phase-aligned with `clk`. Compare the two on an oscilloscope to check alignment and jitter.
 5. Try different KP_SEL and KI_SEL settings and compare lock time and jitter.
+6. Probe `ua[0]` (VCTRL, the DAC output that tunes the VCO) with a high-impedance probe. When the loop is locked it should settle to a near-constant voltage, with a small dither.
 
 ## External hardware
 
-None. You need a 10 MHz clock source and an oscilloscope to observe CLK_OUT and LOCK.
+None. You need a 10 MHz clock source and an oscilloscope to observe CLK_OUT, LOCK and VCTRL.

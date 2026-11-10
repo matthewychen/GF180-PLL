@@ -1,52 +1,4 @@
-# Sample testbench for a Tiny Tapeout project
-
-This is a sample testbench for a Tiny Tapeout project. It uses [cocotb](https://docs.cocotb.org/en/stable/) to drive the DUT and check the outputs.
-See below to get started or for more information, check the [website](https://tinytapeout.com/hdl/testing/).
-
-## Setting up
-
-1. Edit [Makefile](Makefile) and modify `PROJECT_SOURCES` to point to your Verilog files.
-2. [tb.v](tb.v) instantiates the top module `tt_um_ding_dong_pll`. Keep it in sync if the top module is renamed.
-
-## How to run
-
-To run the RTL simulation:
-
-```sh
-make -B
-```
-
-To run gatelevel simulation, first harden your project and copy `../runs/wokwi/results/final/verilog/gl/{your_module_name}.v` to `gate_level_netlist.v`.
-
-Then run:
-
-```sh
-make -B GATES=yes
-```
-
-If you wish to save the waveform in VCD format instead of FST format, edit tb.v to use `$dumpfile("tb.vcd");` and then run:
-
-```sh
-make -B FST=
-```
-
-This will generate `tb.vcd` instead of `tb.fst`.
-
-## How to view the waveform file
-
-Using GTKWave
-
-```sh
-gtkwave tb.fst tb.gtkw
-```
-
-Using Surfer
-
-```sh
-surfer tb.fst
-```
-
-# Block-level testbenches (unit tests)
+# Tests
 
 Each block (lock detector, PFD, PI filter, divider, ...) has its own plain-Verilog
 testbench. CI (`.github/workflows/unit.yaml`) runs all of them, plus a Verilator
@@ -88,7 +40,11 @@ cd test && gtkwave tb_lock_detector.vcd tb_lock_detector.gtkw
 5. Run `test/run_unit_tests.sh <block>` locally, then push. Nothing else needs registering.
 
 A testbench fails CI if it doesn't compile, exits non-zero, runs longer than 300 s, or never prints `PASS`.
-`tb.v` is the cocotb top-level harness, and it's tested separately by `make` and the `test` workflow.
 
-Add your design files to `source_files` in `info.yaml` and `PROJECT_SOURCES` in `test/Makefile` once
-they're instantiated from the top module.
+## Top-level / closed-loop simulation
+
+This is a custom-GDS (analog) project. `src/project.v` is only a port stub, so there's no top-level
+RTL to simulate yet. The template's cocotb harness was removed for that reason. The planned
+closed-loop test wraps the digital core (PFD, PI filter, divider, lock detector) with a behavioral
+DAC and VCO model, and goes here as `test/tb_<name>.v` (or a cocotb test) once the core exists.
+`requirements.txt` keeps cocotb available for it.

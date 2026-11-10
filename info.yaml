@@ -4,18 +4,20 @@ project:
   author:       "Benjamin Dong, Gabe Hoh, Hugh Ding, Matthew Chen"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  "Bang-bang PLL that multiplies a 10 MHz reference to 80 MHz using a digital PI loop filter, DAC and VCO"      # One line description of what your project does
-  language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
+  language:     "Analog" # other examples include Verilog, Amaranth, VHDL, etc
   clock_hz:     10000000      # Clock frequency in Hz (or 0 if not applicable)
 
   # How many tiles your design occupies? A single tile is about 340x160 uM.
-  tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 3x4 or 4x4
+  tiles: "1x2"          # Valid values for analog projects: 1x2, 2x2, 3x2, 4x2
+
+  # How many analog pins does your project use?
+  analog_pins: 1        # Valid values: 0 to 6. ua[0] = VCTRL (open-loop observation)
+  uses_vapwr: false     # Set to true if your project uses the second analog power supply (VAPWR) in addition to VDPWR (3.3V)
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
   top_module:  "tt_um_ding_dong_pll"
 
-  # List your project's source files here.
-  # Source files must be in ./src and you must list each source file separately, one per line.
-  # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
+  # List your project's source files here. Source files must be in ./src and you must list each source file separately, one per line:
   source_files:
     - "project.v"
 
@@ -51,6 +53,14 @@ pinout:
   uio[5]: ""
   uio[6]: ""
   uio[7]: ""
+
+  # Analog pins - make sure to also set "analog_pins" above, else the pins won't be connected
+  ua[0]: "VCTRL"
+  ua[1]: ""
+  ua[2]: ""
+  ua[3]: ""
+  ua[4]: ""
+  ua[5]: ""
 
 # Do not change!
 yaml_version: 6

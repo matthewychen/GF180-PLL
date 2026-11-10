@@ -1,11 +1,41 @@
 name: gds
 
+# Analog / custom-GDS flow (from TinyTapeout/ttgf-analog-template).
+# The layout is made by hand (Magic/KLayout) and committed to gds/ and lef/.
+# Until those files exist, the "check" job reports that and the rest is skipped.
+
 on:
   push:
   workflow_dispatch:
 
 jobs:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      top_module: ${{ steps.top.outputs.TOP_MODULE }}
+      has_layout: ${{ steps.layout.outputs.HAS_LAYOUT }}
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v6
+
+      - name: Read top module name
+        id: top
+        run: echo TOP_MODULE=`yq '.project.top_module' info.yaml` | tee -a $GITHUB_OUTPUT
+
+      - name: Check for layout files
+        id: layout
+        run: |
+          TOP=${{ steps.top.outputs.TOP_MODULE }}
+          if [ -f "gds/$TOP.gds" ] && [ -f "lef/$TOP.lef" ]; then
+            echo HAS_LAYOUT=true | tee -a $GITHUB_OUTPUT
+          else
+            echo HAS_LAYOUT=false | tee -a $GITHUB_OUTPUT
+            echo "::notice::No layout yet (gds/$TOP.gds and lef/$TOP.lef). Skipping GDS, precheck and viewer."
+          fi
+
   gds:
+    needs: check
+    if: needs.check.outputs.has_layout == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: checkout repo
@@ -13,9 +43,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build GDS
-        uses: TinyTapeout/tt-gds-action@ttgf26c
+      - name: Create and publish the GDS artifact
+        uses: TinyTapeout/tt-gds-action/custom_gds@ttgf26c
         with:
+          top_module: ${{ needs.check.outputs.top_module }}
+          gds_path: gds/${{ needs.check.outputs.top_module }}.gds
+          lef_path: lef/${{ needs.check.outputs.top_module }}.lef
+          verilog_path: src/project.v
           pdk: gf180mcuD
 
   precheck:
@@ -24,18 +58,6 @@ jobs:
     steps:
       - name: Run Tiny Tapeout Precheck
         uses: TinyTapeout/tt-gds-action/precheck@ttgf26c
-
-  gl_test:
-    needs: gds
-    runs-on: ubuntu-24.04
-    steps:
-      - name: checkout repo
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: GL test
-        uses: TinyTapeout/tt-gds-action/gl_test@ttgf26c
 
   viewer:
     needs: gds
