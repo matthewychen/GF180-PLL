@@ -2,9 +2,9 @@
 `default_nettype none
 
 // Testbench for lock_detector.
-// Run from test/:
-//   iverilog -g2005 -o tb_lock_detector.vvp tb_lock_detector.v ../src/lock_detector.v && vvp tb_lock_detector.vvp
-// View waveforms:
+// Run (from repo root):
+//   test/run_unit_tests.sh lock_detector
+// View waveforms (from test/):
 //   gtkwave tb_lock_detector.vcd tb_lock_detector.gtkw
 //
 // Timing convention: early changes on the falling edge, the DUT samples it on
@@ -178,12 +178,14 @@ module tb_lock_detector;
         rst_n = 1'b1;
 
         // ------------------------------------------------------------------
-        if (errors == 0)
+        // run_unit_tests.sh needs a line that is exactly "PASS", and a
+        // non-zero exit ($fatal) on failure so CI goes red.
+        if (errors == 0) begin
             $display("PASS");
-        else
-            $display("FAILED with %0d errors", errors);
-
-        $finish;
+            $finish;
+        end else begin
+            $fatal(1, "FAILED with %0d errors", errors);
+        end
     end
 
 endmodule

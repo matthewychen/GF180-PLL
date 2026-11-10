@@ -1,0 +1,40 @@
+name: unit
+
+# Fast checks on every push and PR: Verilator lint of src/ and every
+# block-level testbench in test/tb_*.v. See test/README.md to add a testbench.
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Install Verilator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+
+      - name: Lint src/
+        run: test/lint.sh
+
+  unit-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Install Icarus Verilog
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+
+      - name: Run block testbenches
+        run: test/run_unit_tests.sh
+
+      - name: Upload waveforms and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-waveforms
+          path: |
+            test/*.vcd
+            test/sim_build/unit/*.log
