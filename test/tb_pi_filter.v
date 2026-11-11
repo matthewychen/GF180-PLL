@@ -117,9 +117,10 @@ module tb_pi_filter;
             errors = errors + 1;
         end
 
-        if (errors == 0)
-            $display("PASS: reset, Kp steps, lock bounce and saturation all correct");
-        else
+        if (errors == 0) begin
+            $display("All checks passed: reset, Kp steps, lock bounce and saturation");
+            $display("PASS");
+        end else
             $display("FAILED with %0d errors", errors);
 
         $finish;
