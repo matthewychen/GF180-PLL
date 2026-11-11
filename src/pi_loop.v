@@ -32,7 +32,8 @@ module pi_filter (
         else
             acc_next = (acc <= IMAX - ki_step) ? acc + ki_step : IMAX;
     end
- 
+    
+    // Proportional path
     always @(*) begin
         if (early) begin
             // Extend to 7 bits to catch underflow below 0
