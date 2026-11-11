@@ -1,11 +1,11 @@
 `default_nettype none
 `timescale 1ns / 1ps
  
-module tb ();
+module tb_phase_detector ();
  
   initial begin
-    $dumpfile("tb.vcd");
-    $dumpvars(0, tb);
+    $dumpfile("tb_phase_detector.vcd");
+    $dumpvars(0, tb_phase_detector);
   end
  
   /* Phase Detector Logic
@@ -49,7 +49,7 @@ module tb ();
     apply_reset(5);
  
     for (int d = 1; d < CLK_PERIOD; d++) begin
-      if (d == HALF) continue;         // 180 deg: fb edge coincides with clk edge (race)
+      if (d != HALF) begin            // 180 deg: fb edge coincides with clk edge (race)
  
       fb_clk = 0;
       @(posedge clk);                  // align to a ref rising edge
@@ -74,11 +74,16 @@ module tb ();
       join
  
       $display("Offset %2d / %0d ns -> %s (expected %s)", d, CLK_PERIOD, early ? "early" : "late ", (d > HALF) ? "early" : "late ");
+      end
     end
  
-    if (errors == 0) $display("PASS: %0d checks", checks);
-    else             $display("FAIL: %0d / %0d checks", errors, checks);
-    $finish;
+    if (errors == 0) begin
+      $display("%0d checks passed", checks);
+      $display("PASS");
+      $finish;
+    end else begin
+      $fatal(1, "FAIL: %0d / %0d checks", errors, checks);
+    end
   end
  
 endmodule

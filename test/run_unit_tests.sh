@@ -2,7 +2,7 @@
 # Run every block-level Verilog testbench in test/.
 #
 # Convention (see test/README.md):
-#   - Testbench file:  test/tb_<block>.v
+#   - Testbench file:  test/tb_<block>.v  (or .sv for SystemVerilog)
 #   - Top module name: tb_<block>          (must match the file name)
 #   - It is compiled together with every file in src/, so it can
 #     instantiate any module there.
@@ -25,20 +25,23 @@ TIMEOUT="${UNIT_TEST_TIMEOUT:-300}"   # seconds per testbench
 mkdir -p "$BUILD_DIR"
 shopt -s nullglob
 
-# Pick testbenches: all tb_*.v, or the ones named on the command line.
-# tb.v (the cocotb top-level harness) is deliberately excluded.
+# Pick testbenches: all tb_*.v / tb_*.sv, or the ones named on the command line.
 if [ $# -gt 0 ]; then
     tbs=()
     for name in "$@"; do
-        name="${name#tb_}"; name="${name%.v}"
-        tbs+=("$TEST_DIR/tb_${name}.v")
+        name="${name#tb_}"; name="${name%.v}"; name="${name%.sv}"
+        if [ -f "$TEST_DIR/tb_${name}.sv" ]; then
+            tbs+=("$TEST_DIR/tb_${name}.sv")
+        else
+            tbs+=("$TEST_DIR/tb_${name}.v")
+        fi
     done
 else
-    tbs=("$TEST_DIR"/tb_*.v)
+    tbs=("$TEST_DIR"/tb_*.v "$TEST_DIR"/tb_*.sv)
 fi
 
 if [ ${#tbs[@]} -eq 0 ]; then
-    echo "No testbenches found (expected test/tb_<block>.v)."
+    echo "No testbenches found (expected test/tb_<block>.v or .sv)."
     exit 1
 fi
 
@@ -48,7 +51,7 @@ fail=0
 summary=""
 
 for tb in "${tbs[@]}"; do
-    name="$(basename "$tb" .v)"
+    name="$(basename "$tb")"; name="${name%.v}"; name="${name%.sv}"
     log="$BUILD_DIR/$name.log"
     vvp_file="$BUILD_DIR/$name.vvp"
 

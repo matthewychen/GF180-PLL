@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Lint every module in src/ with Verilator (-Wall).
 #
-# Each file in src/ is linted with its own module as the top, together with
-# all other src/ files, so cross-module port mismatches are caught too.
+# Every module in every file in src/ is linted as its own top. Submodules
+# are pulled in from src/ by file name, so cross-module port mismatches are
+# caught too. Keep each instantiated module in src/<module_name>.v.
 # New files in src/ are picked up automatically - nothing to register.
 #
 # Usage (from anywhere):
@@ -24,19 +25,23 @@ VERILATOR_FLAGS=(--lint-only -Wall -Wno-DECLFILENAME --timescale 1ns/1ps)
 
 fail=0
 for f in "${src_files[@]}"; do
-    # first "module <name>" in the file
-    top="$(sed -n -E 's/^[[:space:]]*module[[:space:]]+([A-Za-z_][A-Za-z0-9_$]*).*/\1/p' "$f" | head -n 1)"
-    if [ -z "$top" ]; then
+    # every "module <name>" in the file (a file may hold several modules)
+    tops="$(sed -n -E 's/^[[:space:]]*module[[:space:]]+([A-Za-z_][A-Za-z0-9_$]*).*/\1/p' "$f")"
+    if [ -z "$tops" ]; then
         echo "SKIP  $(basename "$f")  (no module found)"
         continue
     fi
-    if out="$(verilator "${VERILATOR_FLAGS[@]}" --top-module "$top" "${src_files[@]}" 2>&1)"; then
-        echo "OK    $(basename "$f")  ($top)"
-    else
-        echo "FAIL  $(basename "$f")  ($top)"
-        echo "$out"
-        fail=1
-    fi
+    for top in $tops; do
+        # Only this file on the command line; submodules are found in src/
+        # by file name (-y), so module <name> must live in src/<name>.v.
+        if out="$(verilator "${VERILATOR_FLAGS[@]}" -y "$SRC_DIR" --top-module "$top" "$f" 2>&1)"; then
+            echo "OK    $(basename "$f")  ($top)"
+        else
+            echo "FAIL  $(basename "$f")  ($top)"
+            echo "$out"
+            fail=1
+        fi
+    done
 done
 
 exit $fail

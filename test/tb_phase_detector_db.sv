@@ -1,11 +1,11 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module tb ();
+module tb_phase_detector_db ();
 
   initial begin
-    $dumpfile("tb.vcd");
-    $dumpvars(0, tb);
+    $dumpfile("tb_phase_detector_db.vcd");
+    $dumpvars(0, tb_phase_detector_db);
   end
 
   /* Phase Detector Logic
@@ -73,7 +73,7 @@ module tb ();
     apply_reset(5);
 
     for (int d = 1; d < CLK_PERIOD; d++) begin
-      if (d == HALF) continue;         // 180 deg: lead or lag is ambiguous
+      if (d != HALF) begin            // 180 deg: lead or lag is ambiguous
 
       // The detector pairs each edge with the next edge of the other clock,
       // so reset it and release it while clk and fb_clk are both low, just
@@ -113,11 +113,16 @@ module tb ();
       join
 
       $display("Offset %2d / %0d ns -> %s (expected %s)", d, CLK_PERIOD, got(), expected(d));
+      end
     end
 
-    if (errors == 0) $display("PASS: %0d checks", checks);
-    else             $display("FAIL: %0d / %0d checks", errors, checks);
-    $finish;
+    if (errors == 0) begin
+      $display("%0d checks passed", checks);
+      $display("PASS");
+      $finish;
+    end else begin
+      $fatal(1, "FAIL: %0d / %0d checks", errors, checks);
+    end
   end
 
 endmodule

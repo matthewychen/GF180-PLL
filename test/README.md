@@ -23,8 +23,10 @@ cd test && gtkwave tb_lock_detector.vcd tb_lock_detector.gtkw
 ## Adding a testbench for your block
 
 1. Put your design in `src/<block>.v`. Lint picks it up automatically.
-2. Create `test/tb_<block>.v` whose top module is named `tb_<block>`, the same as the file name.
+2. Create `test/tb_<block>.v` (or `.sv` for SystemVerilog) whose top module is named `tb_<block>`, the same as the file name.
    It's compiled together with every file in `src/`, so it can instantiate any module there.
+   Keep each module in `src/<module_name>.v`. Lint finds submodules by file name.
+   CI uses Icarus Verilog, so stick to what it supports (for example, no `continue` / `break` in loops).
 3. At the end of the test, print exactly `PASS` on success, and call `$fatal` on failure:
 
    ```verilog
@@ -41,10 +43,28 @@ cd test && gtkwave tb_lock_detector.vcd tb_lock_detector.gtkw
 
 A testbench fails CI if it doesn't compile, exits non-zero, runs longer than 300 s, or never prints `PASS`.
 
-## Top-level / closed-loop simulation
+## Closed-loop simulation (`tb_pll_closed_loop.v`)
 
-This is a custom-GDS (analog) project. `src/project.v` is only a port stub, so there's no top-level
-RTL to simulate yet. The template's cocotb harness was removed for that reason. The planned
-closed-loop test wraps the digital core (PFD, PI filter, divider, lock detector) with a behavioral
-DAC and VCO model, and goes here as `test/tb_<name>.v` (or a cocotb test) once the core exists.
-`requirements.txt` keeps cocotb available for it.
+`src/pll_digital.v` is the digital core that gets hardened with OpenLane: phase detector,
+synchronizer, PI filter, feedback divider and lock detector. `tb_pll_closed_loop.v` wraps it with a
+behavioral DAC and VCO model and sweeps every `KP_SEL`/`KI_SEL` setting at the tt, ss and ff corners.
+For each run it prints lock time, frequency error, code dither and CLK_OUT phase alignment.
+
+```sh
+test/run_unit_tests.sh pll_closed_loop
+cat test/sim_build/unit/tb_pll_closed_loop.log     # the results table
+```
+
+The DAC and VCO numbers at the top of the testbench are the updated design values: DAC 0–2 V and about
+2 MHz per code. The VCO's absolute frequency is an assumption (code 32 = 80 MHz). Replace it with
+Matthew's measured frequency-vs-VCTRL curve once it exists.
+
+A second sweep prints a **capture-range grid**: how far the VCO can start from 80 MHz and still lock, for each
+KP_SEL. `o` = locks, `f` = locks but LOCK rose too early, `x` = never locks. CI fails if KP_SEL = 0 can no longer
+capture ±`CAP_MIN_PCT`.
+
+CI enforces the tt corner. The ss/ff rows are printed as `KNOWN ISSUE`: with a ±20% VCO spread the
+loop can't pull in, and the lock detector false-locks. Set `STRICT_CORNERS = 1` once frequency
+acquisition is fixed.
+
+`src/project.v` is only the port stub for the custom GDS, so it isn't simulated.
