@@ -1,0 +1,35 @@
+[*]
+[*] GTKWave save file for tb_lock_detector
+[*] Open from test/:  gtkwave tb_lock_detector.vcd tb_lock_detector.gtkw
+[*]
+[timestart] 0
+[size] 1400 600
+[pos] -1 -1
+[treeopen] tb_lock_detector.
+[sst_width] 250
+[signals_width] 260
+[sst_expanded] 1
+[sst_vpaned_height] 160
+@200
+-Inputs
+@28
+tb_lock_detector.clk
+tb_lock_detector.rst_n
+tb_lock_detector.early
+@200
+-Internals
+@28
+tb_lock_detector.dut.last_bit
+@24
+tb_lock_detector.dut.length_counter[3:0]
+tb_lock_detector.dut.quiet_counter[8:0]
+@200
+-Output
+@28
+tb_lock_detector.lock
+@200
+-Testbench
+@24
+tb_lock_detector.errors[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
