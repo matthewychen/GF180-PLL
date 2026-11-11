@@ -1,7 +1,8 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-// Closed-loop sim: real pll_digital RTL + behavioral DAC (0-2 V) and VCO (~2 MHz/code; code 32 = 80 MHz is assumed).
+// Closed-loop sim: real pll_digital RTL + behavioral DAC (1.95 V - 30.9 mV x code) and VCO (Matthew's 5-point
+// freq-vs-VCTRL table per corner, linear between points; freq FALLS as VCTRL rises, so code up = freq up).
 // Sweep 1: corners x KP/KI table. Sweep 2: capture grid (o = locks, f = false LOCK, x = no lock). CI enforces KP_SEL 0-2.
 // Run: test/run_unit_tests.sh pll_closed_loop   Results: test/sim_build/unit/tb_pll_closed_loop.log
 module tb_pll_closed_loop;
@@ -11,10 +12,8 @@ module tb_pll_closed_loop;
     // ------------------------------------------------------------------
     localparam real F_REF     = 10.0e6;
     localparam real F_TARGET  = 80.0e6;
-    localparam real V_MIN     = 0.0;       // DAC output at code 0
-    localparam real V_MAX     = 2.0;       // DAC output at code 63
-    localparam real KVCO      = 63.0e6;    // Hz/V, tt corner (~2 MHz per code)
-    localparam real F_MIN     = 16.0e6;    // VCO at V_MIN, tt (assumed: code 32 = 80 MHz)
+    localparam real V_FS      = 1.95;      // DAC output at code 0 (0.6 * 3.3 V * 63/64)
+    localparam real V_LSB     = 0.0309;    // DAC step; VCTRL = V_FS - code * V_LSB
 
     localparam integer RUN_CYCLES = 3000;
     localparam integer WINDOW     = 500;   // steady-state measurement window
@@ -27,9 +26,9 @@ module tb_pll_closed_loop;
     localparam real    SETTLE_TOL     = 0.0025;
     localparam real    PHASE_TOL_NS   = 25.0;  // mean |CLK_OUT - ref| edge offset
 
-    localparam integer CAP_MAX_PCT  = 20;      // capture sweep: -20 % .. +20 %
+    localparam integer CAP_MAX_PCT  = 34;      // capture sweep: -34 % .. +34 % (real corners sit at ~-32 % / +29 %)
     localparam integer CAP_STEP_PCT = 2;
-    localparam integer CAP_MIN_PCT  = 20;      // enforced KP_SEL rows must capture +/-20 %
+    localparam integer CAP_MIN_PCT  = 34;      // enforced KP_SEL rows must capture +/-34 %
 
     // ------------------------------------------------------------------
     // DUT and analog model
@@ -54,22 +53,53 @@ module tb_pll_closed_loop;
         .lock   (lock)
     );
 
-    real corner = 1.0;   // frequency scale factor for the current corner
+    // VCO: Matthew's simulated frequency vs VCTRL (one temperature), tt / ss / ff.
+    // 80 MHz lands at code ~34 (tt), ~45 (ss), ~20 (ff).
+    real tab_v [0:4];
+    real tab_f [0:14];     // [corner*5 + point]; Icarus 11 has no 2-D real arrays
+    initial begin
+        tab_v[0] = 0.00;  tab_v[1] = 0.56;  tab_v[2] = 0.90;  tab_v[3] = 1.32;  tab_v[4] = 2.00;
+        tab_f[0] = 137.0e6; tab_f[1] = 103.0e6; tab_f[2] = 80.0e6; tab_f[3] = 55.0e6; tab_f[4] = 19.0e6; // tt
+        tab_f[5] = 112.0e6; tab_f[6] =  80.0e6; tab_f[7] = 58.0e6; tab_f[8] = 35.0e6; tab_f[9] =  5.9e6; // ss
+        tab_f[10] = 169.0e6; tab_f[11] = 134.0e6; tab_f[12] =107.0e6; tab_f[13] = 80.0e6; tab_f[14] = 39.0e6; // ff
+    end
 
-    function real vctrl_of(input [5:0] c);
-        vctrl_of = V_MIN + c * (V_MAX - V_MIN) / 63.0;
+    integer tab_idx = 0;   // which corner table (sweep 1)
+    real    scale   = 1.0; // extra frequency scale on top of the table (sweep 2)
+
+    function real vctrl_of_r(input real code_r);
+        vctrl_of_r = V_FS - code_r * V_LSB;
+    endfunction
+
+    // linear interpolation in the table, clamped at the ends
+    function real f_table(input integer ci, input real v);
+        integer i;
+        begin
+            if (v <= tab_v[0])      f_table = tab_f[ci*5];
+            else if (v >= tab_v[4]) f_table = tab_f[ci*5+4];
+            else begin
+                f_table = tab_f[ci*5+4];
+                for (i = 0; i < 4; i = i + 1)
+                    if (v >= tab_v[i] && v < tab_v[i+1])
+                        f_table = tab_f[ci*5+i] + (tab_f[ci*5+i+1] - tab_f[ci*5+i])
+                                                 * (v - tab_v[i]) / (tab_v[i+1] - tab_v[i]);
+            end
+        end
+    endfunction
+
+    function real f_of_code(input real code_r);
+        f_of_code = scale * f_table(tab_idx, vctrl_of_r(code_r));
     endfunction
 
     function real fvco_of(input [5:0] c);
-        fvco_of = corner * (F_MIN + KVCO * (vctrl_of(c) - V_MIN));
+        fvco_of = f_of_code(c);
     endfunction
 
     // Average VCO frequency, from the PI filter's integrator (12-bit, 6
     // fractional bits). The output code also carries the proportional kick,
     // so it swings +/-Kp codes every cycle even when the loop is locked.
     function real favg_now(input dummy);
-        favg_now = corner * (F_MIN + KVCO * (V_MAX - V_MIN) / 63.0
-                             * (dut.u_pi_filter.acc / 64.0));
+        favg_now = f_of_code(dut.u_pi_filter.acc / 64.0);
     endfunction
 
     // Reference: 10 MHz
@@ -192,10 +222,12 @@ module tb_pll_closed_loop;
         $display("-------+--------+-------+---------+-----------+----------+--------+-------+----------------------+-----");
 
         for (c = 0; c < N_CORNERS; c = c + 1) begin
+            tab_idx = c;
+            scale   = 1.0;
             case (c)
-                0: begin corner = 1.0; cname = "tt"; end
-                1: begin corner = 0.8; cname = "ss"; end
-                2: begin corner = 1.2; cname = "ff"; end
+                0: cname = "tt";
+                1: cname = "ss";
+                2: cname = "ff";
             endcase
             for (kp = 0; kp < 4; kp = kp + 1) begin
                 enforce = ((c == 0) || (STRICT_CORNERS != 0)) && (kp <= MAX_ENFORCED_KP);
@@ -234,7 +266,8 @@ module tb_pll_closed_loop;
 
         // ---------------- Sweep 2: capture range ----------------
         $display("");
-        $display("Sweep 2: capture range (VCO frequency offset from the tt model, %%)");
+        $display("Sweep 2: capture range (tt table scaled by the given %%; real ss/ff mid-code offsets are ~-32 %% / +29 %%)");
+        tab_idx = 0;
         $display("  o = acquired   f = acquired, but LOCK rose early (false lock)   x = never acquired");
         grid = "";
         for (off = -CAP_MAX_PCT; off <= CAP_MAX_PCT; off = off + CAP_STEP_PCT) begin
@@ -254,7 +287,7 @@ module tb_pll_closed_loop;
 
                 // one run per offset, left to right; one character per cell
                 for (off = -CAP_MAX_PCT; off <= CAP_MAX_PCT; off = off + CAP_STEP_PCT) begin
-                    corner = 1.0 + off / 100.0;
+                    scale = 1.0 + off / 100.0;
                     do_run(kp, ki);
                     if (!acquired)       gcell = "   x";
                     else if (false_lock) gcell = "   f";
@@ -294,7 +327,7 @@ module tb_pll_closed_loop;
                 $display(" %0d  %0d |%0s | %+0d%% .. %+0d%%%0s", kp, ki, grid, cap_lo, cap_hi, flag_str);
             end
         end
-        corner = 1.0;
+        scale = 1.0;
 
         $display("");
         $display("false locks (sweep 1): %0d   known issues (not enforced): %0d   errors: %0d",
