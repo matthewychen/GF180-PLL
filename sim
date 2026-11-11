@@ -1,0 +1,447 @@
+#! /c/iverilog/bin/vvp
+:ivl_version "0.9.7 " "(v0_9_7)";
+:vpi_time_precision - 12;
+:vpi_module "system";
+:vpi_module "v2005_math";
+:vpi_module "va_math";
+S_011B6A88 .scope module, "tb_pi_filter" "tb_pi_filter" 2 7;
+ .timescale -9 -12;
+v011C0770_0 .var "clk", 0 0;
+v011C0038_0 .net "code", 5 0, v011B45F8_0; 1 drivers
+v011C02F8_0 .var "early", 0 0;
+v011C02A0_0 .var/i "errors", 31 0;
+v011C0090_0 .var/i "i", 31 0;
+v011C0350_0 .net "integ", 5 0, L_011C04B0; 1 drivers
+v011C0610_0 .var "ki_sel", 1 0;
+v011C00E8_0 .var "kp_sel", 1 0;
+v011C01F0_0 .var "prev", 5 0;
+v011C03A8_0 .var "rst_n", 0 0;
+S_011B6B98 .scope task, "do_reset" "do_reset" 2 35, 2 35, S_011B6A88;
+ .timescale -9 -12;
+E_011B9740 .event negedge, v011B45A0_0;
+TD_tb_pi_filter.do_reset ;
+    %wait E_011B9740;
+    %set/v v011C03A8_0, 0, 1;
+    %wait E_011B9740;
+    %wait E_011B9740;
+    %set/v v011C03A8_0, 1, 1;
+    %end;
+S_011B6B10 .scope task, "expect_code" "expect_code" 2 43, 2 43, S_011B6A88;
+ .timescale -9 -12;
+v011C0248_0 .var "want", 5 0;
+TD_tb_pi_filter.expect_code ;
+    %load/v 8, v011C0038_0, 6;
+    %load/v 14, v011C0248_0, 6;
+    %cmp/u 8, 14, 6;
+    %inv 6, 1;
+    %jmp/0xz  T_1.0, 6;
+    %vpi_func 2 46 "$time", 8, 64;
+    %movi 72, 1000, 64;
+    %div 8, 72, 64;
+    %vpi_call 2 46 "$display", "FAIL at %0t ns: code = %0d, expected %0d", T<8,64,u>, v011C0038_0, v011C0248_0;
+    %load/v 8, v011C02A0_0, 32;
+    %mov 40, 39, 1;
+    %addi 8, 1, 33;
+    %set/v v011C02A0_0, 8, 32;
+T_1.0 ;
+    %end;
+S_011B60F8 .scope module, "dut" "pi_filter" 2 17, 3 6, S_011B6A88;
+ .timescale -9 -12;
+P_011C6784 .param/l "IMAX" 3 18, C4<111111111111>;
+P_011C6798 .param/l "MID" 3 17, C4<100000000000>;
+v011888B8_0 .net *"_s0", 11 0, C4<000000000001>; 1 drivers
+v0118ABC0_0 .net *"_s4", 5 0, C4<000001>; 1 drivers
+v0118A9B0_0 .var "acc", 11 0;
+v0118AA08_0 .var "acc_next", 11 0;
+v011B45A0_0 .net "clk", 0 0, v011C0770_0; 1 drivers
+v011B45F8_0 .var "code", 5 0;
+v0118A7A0_0 .var "code_next", 5 0;
+v0118A7F8_0 .var "code_sum", 6 0;
+v0118A850_0 .net "early", 0 0, v011C02F8_0; 1 drivers
+v0118EBE0_0 .alias "integ", 5 0, v011C0350_0;
+v0118EC38_0 .net "ki_sel", 1 0, v011C0610_0; 1 drivers
+v0118EC90_0 .net "ki_step", 11 0, L_011C0400; 1 drivers
+v01183250_0 .net "kp_sel", 1 0, v011C00E8_0; 1 drivers
+v011832A8_0 .net "kp_step", 5 0, L_011C0458; 1 drivers
+v01183300_0 .net "rst_n", 0 0, v011C03A8_0; 1 drivers
+E_011B96A0/0 .event negedge, v01183300_0;
+E_011B96A0/1 .event posedge, v011B45A0_0;
+E_011B96A0 .event/or E_011B96A0/0, E_011B96A0/1;
+E_011B9520 .event edge, v0118A850_0, v0118AA08_0, v011832A8_0, v0118A7F8_0;
+E_011B95E0 .event edge, v0118A850_0, v0118A9B0_0, v0118EC90_0;
+L_011C0400 .shift/l 12, C4<000000000001>, v011C0610_0;
+L_011C0458 .shift/l 6, C4<000001>, v011C00E8_0;
+L_011C04B0 .part v0118A9B0_0, 6, 6;
+    .scope S_011B60F8;
+T_2 ;
+    %wait E_011B95E0;
+    %load/v 8, v0118A850_0, 1;
+    %jmp/0xz  T_2.0, 8;
+    %load/v 8, v0118EC90_0, 12;
+    %load/v 20, v0118A9B0_0, 12;
+    %cmp/u 8, 20, 12;
+    %or 5, 4, 1;
+    %mov 8, 5, 1;
+    %jmp/0  T_2.2, 8;
+    %load/v 9, v0118A9B0_0, 12;
+    %load/v 21, v0118EC90_0, 12;
+    %sub 9, 21, 12;
+    %jmp/1  T_2.4, 8;
+T_2.2 ; End of true expr.
+    %jmp/0  T_2.3, 8;
+ ; End of false expr.
+    %blend  9, 0, 12; Condition unknown.
+    %jmp  T_2.4;
+T_2.3 ;
+    %mov 9, 0, 12; Return false value
+T_2.4 ;
+    %set/v v0118AA08_0, 9, 12;
+    %jmp T_2.1;
+T_2.0 ;
+    %load/v 8, v0118A9B0_0, 12;
+    %load/v 20, v0118EC90_0, 12;
+    %mov 32, 1, 12;
+    %sub 32, 20, 12;
+    %cmp/u 8, 32, 12;
+    %or 5, 4, 1;
+    %mov 8, 5, 1;
+    %jmp/0  T_2.5, 8;
+    %load/v 9, v0118A9B0_0, 12;
+    %load/v 21, v0118EC90_0, 12;
+    %add 9, 21, 12;
+    %jmp/1  T_2.7, 8;
+T_2.5 ; End of true expr.
+    %load/v 21, v0118A9B0_0, 12;
+    %load/v 33, v0118EC90_0, 12;
+    %add 21, 33, 12;
+    %jmp/0  T_2.6, 8;
+ ; End of false expr.
+    %blend  9, 21, 12; Condition unknown.
+    %jmp  T_2.7;
+T_2.6 ;
+    %mov 9, 21, 12; Return false value
+T_2.7 ;
+    %set/v v0118AA08_0, 9, 12;
+T_2.1 ;
+    %jmp T_2;
+    .thread T_2, $push;
+    .scope S_011B60F8;
+T_3 ;
+    %wait E_011B9520;
+    %load/v 8, v0118A850_0, 1;
+    %jmp/0xz  T_3.0, 8;
+    %ix/load 1, 6, 0;
+    %mov 4, 0, 1;
+    %jmp/1 T_3.2, 4;
+    %load/x1p 15, v0118AA08_0, 6;
+    %jmp T_3.3;
+T_3.2 ;
+    %mov 15, 2, 6;
+T_3.3 ;
+    %mov 8, 15, 6; Move signal select into place
+    %mov 14, 0, 1;
+    %load/v 15, v011832A8_0, 6;
+    %mov 21, 0, 1;
+    %sub 8, 15, 7;
+    %set/v v0118A7F8_0, 8, 7;
+    %ix/load 1, 6, 0;
+    %mov 4, 0, 1;
+    %jmp/1 T_3.7, 4;
+    %load/x1p 8, v0118A7F8_0, 1;
+    %jmp T_3.8;
+T_3.7 ;
+    %mov 8, 2, 1;
+T_3.8 ;
+; Save base=8 wid=1 in lookaside.
+    %jmp/0  T_3.4, 8;
+    %mov 9, 0, 6;
+    %jmp/1  T_3.6, 8;
+T_3.4 ; End of true expr.
+    %load/v 15, v0118A7F8_0, 6; Only need 6 of 7 bits
+; Save base=15 wid=6 in lookaside.
+    %jmp/0  T_3.5, 8;
+ ; End of false expr.
+    %blend  9, 15, 6; Condition unknown.
+    %jmp  T_3.6;
+T_3.5 ;
+    %mov 9, 15, 6; Return false value
+T_3.6 ;
+    %set/v v0118A7A0_0, 9, 6;
+    %jmp T_3.1;
+T_3.0 ;
+    %ix/load 1, 6, 0;
+    %mov 4, 0, 1;
+    %jmp/1 T_3.9, 4;
+    %load/x1p 15, v0118AA08_0, 6;
+    %jmp T_3.10;
+T_3.9 ;
+    %mov 15, 2, 6;
+T_3.10 ;
+    %mov 8, 15, 6; Move signal select into place
+    %mov 14, 0, 1;
+    %load/v 15, v011832A8_0, 6;
+    %mov 21, 0, 1;
+    %add 8, 15, 7;
+    %set/v v0118A7F8_0, 8, 7;
+    %ix/load 1, 6, 0;
+    %mov 4, 0, 1;
+    %jmp/1 T_3.14, 4;
+    %load/x1p 8, v0118A7F8_0, 1;
+    %jmp T_3.15;
+T_3.14 ;
+    %mov 8, 2, 1;
+T_3.15 ;
+; Save base=8 wid=1 in lookaside.
+    %jmp/0  T_3.11, 8;
+    %mov 9, 1, 6;
+    %jmp/1  T_3.13, 8;
+T_3.11 ; End of true expr.
+    %load/v 15, v0118A7F8_0, 6; Only need 6 of 7 bits
+; Save base=15 wid=6 in lookaside.
+    %jmp/0  T_3.12, 8;
+ ; End of false expr.
+    %blend  9, 15, 6; Condition unknown.
+    %jmp  T_3.13;
+T_3.12 ;
+    %mov 9, 15, 6; Return false value
+T_3.13 ;
+    %set/v v0118A7A0_0, 9, 6;
+T_3.1 ;
+    %jmp T_3;
+    .thread T_3, $push;
+    .scope S_011B60F8;
+T_4 ;
+    %wait E_011B96A0;
+    %load/v 8, v01183300_0, 1;
+    %inv 8, 1;
+    %jmp/0xz  T_4.0, 8;
+    %movi 8, 2048, 12;
+    %ix/load 0, 12, 0;
+    %assign/v0 v0118A9B0_0, 0, 8;
+    %movi 8, 32, 6;
+    %ix/load 0, 6, 0;
+    %assign/v0 v011B45F8_0, 0, 8;
+    %jmp T_4.1;
+T_4.0 ;
+    %load/v 8, v0118AA08_0, 12;
+    %ix/load 0, 12, 0;
+    %assign/v0 v0118A9B0_0, 0, 8;
+    %load/v 8, v0118A7A0_0, 6;
+    %ix/load 0, 6, 0;
+    %assign/v0 v011B45F8_0, 0, 8;
+T_4.1 ;
+    %jmp T_4;
+    .thread T_4;
+    .scope S_011B6A88;
+T_5 ;
+    %set/v v011C0770_0, 0, 1;
+    %end;
+    .thread T_5;
+    .scope S_011B6A88;
+T_6 ;
+    %set/v v011C03A8_0, 0, 1;
+    %end;
+    .thread T_6;
+    .scope S_011B6A88;
+T_7 ;
+    %set/v v011C02F8_0, 0, 1;
+    %end;
+    .thread T_7;
+    .scope S_011B6A88;
+T_8 ;
+    %set/v v011C00E8_0, 0, 2;
+    %end;
+    .thread T_8;
+    .scope S_011B6A88;
+T_9 ;
+    %set/v v011C0610_0, 0, 2;
+    %end;
+    .thread T_9;
+    .scope S_011B6A88;
+T_10 ;
+    %delay 50000, 0;
+    %load/v 8, v011C0770_0, 1;
+    %inv 8, 1;
+    %set/v v011C0770_0, 8, 1;
+    %jmp T_10;
+    .thread T_10;
+    .scope S_011B6A88;
+T_11 ;
+    %set/v v011C02A0_0, 0, 32;
+    %end;
+    .thread T_11;
+    .scope S_011B6A88;
+T_12 ;
+    %vpi_call 2 53 "$dumpfile", "dump.vcd";
+    %vpi_call 2 54 "$dumpvars", 1'sb0, S_011B6A88;
+    %fork TD_tb_pi_filter.do_reset, S_011B6B98;
+    %join;
+    %movi 8, 32, 6;
+    %set/v v011C0248_0, 8, 6;
+    %fork TD_tb_pi_filter.expect_code, S_011B6B10;
+    %join;
+    %set/v v011C0090_0, 0, 32;
+T_12.0 ;
+    %load/v 8, v011C0090_0, 32;
+   %cmpi/s 8, 4, 32;
+    %jmp/0xz T_12.1, 5;
+    %load/v 8, v011C0090_0, 32;
+    %set/v v011C00E8_0, 8, 2;
+    %set/v v011C0610_0, 0, 2;
+    %set/v v011C02F8_0, 0, 1;
+    %fork TD_tb_pi_filter.do_reset, S_011B6B98;
+    %join;
+    %wait E_011B9740;
+    %movi 8, 32, 6;
+    %movi 14, 1, 6;
+    %ix/getv/s 0, v011C0090_0;
+    %shiftl/i0  14, 6;
+    %add 8, 14, 6;
+    %set/v v011C0248_0, 8, 6;
+    %fork TD_tb_pi_filter.expect_code, S_011B6B10;
+    %join;
+    %ix/load 0, 1, 0;
+    %load/vp0/s 8, v011C0090_0, 32;
+    %set/v v011C0090_0, 8, 32;
+    %jmp T_12.0;
+T_12.1 ;
+    %movi 8, 2, 2;
+    %set/v v011C00E8_0, 8, 2;
+    %set/v v011C0610_0, 0, 2;
+    %fork TD_tb_pi_filter.do_reset, S_011B6B98;
+    %join;
+    %set/v v011C0090_0, 0, 32;
+T_12.2 ;
+    %load/v 8, v011C0090_0, 32;
+   %cmpi/s 8, 20, 32;
+    %jmp/0xz T_12.3, 5;
+    %load/v 8, v011C0090_0, 1; Only need 1 of 32 bits
+; Save base=8 wid=1 in lookaside.
+    %set/v v011C02F8_0, 8, 1;
+    %wait E_011B9740;
+    %load/v 8, v011C02F8_0, 1;
+    %jmp/0  T_12.4, 8;
+    %movi 9, 28, 6;
+    %jmp/1  T_12.6, 8;
+T_12.4 ; End of true expr.
+    %movi 15, 36, 6;
+    %jmp/0  T_12.5, 8;
+ ; End of false expr.
+    %blend  9, 15, 6; Condition unknown.
+    %jmp  T_12.6;
+T_12.5 ;
+    %mov 9, 15, 6; Return false value
+T_12.6 ;
+    %set/v v011C0248_0, 9, 6;
+    %fork TD_tb_pi_filter.expect_code, S_011B6B10;
+    %join;
+    %ix/load 0, 1, 0;
+    %load/vp0/s 8, v011C0090_0, 32;
+    %set/v v011C0090_0, 8, 32;
+    %jmp T_12.2;
+T_12.3 ;
+    %set/v v011C00E8_0, 0, 2;
+    %set/v v011C0610_0, 1, 2;
+    %set/v v011C02F8_0, 0, 1;
+    %fork TD_tb_pi_filter.do_reset, S_011B6B98;
+    %join;
+    %load/v 8, v011C0038_0, 6;
+    %set/v v011C01F0_0, 8, 6;
+    %set/v v011C0090_0, 0, 32;
+T_12.7 ;
+    %load/v 8, v011C0090_0, 32;
+   %cmpi/s 8, 300, 32;
+    %jmp/0xz T_12.8, 5;
+    %wait E_011B9740;
+    %load/v 8, v011C0038_0, 6;
+    %load/v 14, v011C01F0_0, 6;
+    %cmp/u 8, 14, 6;
+    %jmp/0xz  T_12.9, 5;
+    %vpi_func 2 91 "$time", 8, 64;
+    %movi 72, 1000, 64;
+    %div 8, 72, 64;
+    %vpi_call 2 91 "$display", "FAIL at %0t ns: code fell from %0d to %0d while late", T<8,64,u>, v011C01F0_0, v011C0038_0;
+    %load/v 8, v011C02A0_0, 32;
+    %mov 40, 39, 1;
+    %addi 8, 1, 33;
+    %set/v v011C02A0_0, 8, 32;
+T_12.9 ;
+    %load/v 8, v011C0038_0, 6;
+    %set/v v011C01F0_0, 8, 6;
+    %ix/load 0, 1, 0;
+    %load/vp0/s 8, v011C0090_0, 32;
+    %set/v v011C0090_0, 8, 32;
+    %jmp T_12.7;
+T_12.8 ;
+    %set/v v011C0248_0, 1, 6;
+    %fork TD_tb_pi_filter.expect_code, S_011B6B10;
+    %join;
+    %load/v 8, v011C0350_0, 6;
+    %cmpi/u 8, 63, 6;
+    %inv 6, 1;
+    %jmp/0xz  T_12.11, 6;
+    %vpi_call 2 98 "$display", "FAIL: integrator did not saturate at 63, got %0d", v011C0350_0;
+    %load/v 8, v011C02A0_0, 32;
+    %mov 40, 39, 1;
+    %addi 8, 1, 33;
+    %set/v v011C02A0_0, 8, 32;
+T_12.11 ;
+    %set/v v011C02F8_0, 1, 1;
+    %load/v 8, v011C0038_0, 6;
+    %set/v v011C01F0_0, 8, 6;
+    %set/v v011C0090_0, 0, 32;
+T_12.13 ;
+    %load/v 8, v011C0090_0, 32;
+   %cmpi/s 8, 600, 32;
+    %jmp/0xz T_12.14, 5;
+    %wait E_011B9740;
+    %load/v 8, v011C01F0_0, 6;
+    %load/v 14, v011C0038_0, 6;
+    %cmp/u 8, 14, 6;
+    %jmp/0xz  T_12.15, 5;
+    %vpi_func 2 109 "$time", 8, 64;
+    %movi 72, 1000, 64;
+    %div 8, 72, 64;
+    %vpi_call 2 109 "$display", "FAIL at %0t ns: code rose from %0d to %0d while early", T<8,64,u>, v011C01F0_0, v011C0038_0;
+    %load/v 8, v011C02A0_0, 32;
+    %mov 40, 39, 1;
+    %addi 8, 1, 33;
+    %set/v v011C02A0_0, 8, 32;
+T_12.15 ;
+    %load/v 8, v011C0038_0, 6;
+    %set/v v011C01F0_0, 8, 6;
+    %ix/load 0, 1, 0;
+    %load/vp0/s 8, v011C0090_0, 32;
+    %set/v v011C0090_0, 8, 32;
+    %jmp T_12.13;
+T_12.14 ;
+    %set/v v011C0248_0, 0, 6;
+    %fork TD_tb_pi_filter.expect_code, S_011B6B10;
+    %join;
+    %load/v 8, v011C0350_0, 6;
+    %cmpi/u 8, 0, 6;
+    %inv 6, 1;
+    %jmp/0xz  T_12.17, 6;
+    %vpi_call 2 116 "$display", "FAIL: integrator did not saturate at 0, got %0d", v011C0350_0;
+    %load/v 8, v011C02A0_0, 32;
+    %mov 40, 39, 1;
+    %addi 8, 1, 33;
+    %set/v v011C02A0_0, 8, 32;
+T_12.17 ;
+    %load/v 8, v011C02A0_0, 32;
+    %cmpi/u 8, 0, 32;
+    %jmp/0xz  T_12.19, 4;
+    %vpi_call 2 121 "$display", "PASS: reset, Kp steps, lock bounce and saturation all correct";
+    %jmp T_12.20;
+T_12.19 ;
+    %vpi_call 2 123 "$display", "FAILED with %0d errors", v011C02A0_0;
+T_12.20 ;
+    %vpi_call 2 125 "$finish";
+    %end;
+    .thread T_12;
+# The file index is used to find the file name in the following table.
+:file_names 4;
+    "N/A";
+    "<interactive>";
+    "test/tb_pi_filter.v";
+    "src/pi_loop.v";
