@@ -12,6 +12,7 @@ module lock_detector #(
     input  wire clk,    // 10 MHz reference
     input  wire rst_n,  // active-low reset, clears lock
     input  wire early,  // from PFD: 1 = VCO too fast, 0 = too slow
+    input  wire freq_ok,// from freq_acq: VCO frequency count is on target
     output wire lock    // to uo_out[1]
 );
 
@@ -23,6 +24,11 @@ module lock_detector #(
         if (!rst_n) begin
             last_bit       <= 1'b0;
             length_counter <= 0;
+            quiet_counter  <= 0;
+        end else if (!freq_ok) begin
+            // wrong frequency: not locked, start the quiet count again
+            last_bit       <= early;
+            length_counter <= 1;
             quiet_counter  <= 0;
         end else begin
             last_bit <= early;

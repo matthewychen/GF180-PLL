@@ -3,12 +3,15 @@
  
 // pi-loop filter, turns PFD's 1 bit EARLY input to a 6-bit DAC code
 // clamped to 0..63.
+// nudge_up / nudge_dn (from freq_acq) on top of the normal PI update, to pull in large frequency errors.
 module pi_filter (
     input  wire clk,   // 10 MHz reference
     input  wire rst_n, // active-low reset
     input  wire early, // from PFD: 1 = VCO too fast, 0 = too slow
     input  wire [1:0] kp_sel, // ui_in[5:4]: Kp = 1, 2, 4, 8 codes
     input  wire [1:0] ki_sel, // ui_in[7:6]: Ki = 1/64, 1/32, 1/16, 1/8 code
+    input  wire nudge_up,     // from freq_acq: integrator + 1 code this cycle
+    input  wire nudge_dn,     // from freq_acq: integrator - 1 code this cycle
     output reg  [5:0] code,   // output 6 bit digital to DAC, unsigned, bit 5 = MSB
     output wire [5:0] integ   // integrator top 6 bits, for lock detector
 );
@@ -16,9 +19,11 @@ module pi_filter (
     // Integrator: 12 bits = 6 whole-code bits + 6 fraction bits
     localparam [11:0] MID  = 12'd2048; 
     localparam [11:0] IMAX = 12'd4095; 
+    localparam [11:0] NUDGE = 12'd64;  // one whole code
  
     reg  [11:0] acc; // integrator register
-    reg  [11:0] acc_next; // integrator value for next cycle
+    reg  [11:0] acc_pi;   // integrator after the normal PI step
+    reg  [11:0] acc_next; // integrator value for next cycle (PI step + nudge)
     reg  [6:0]  code_sum; // 7 bits so overflow or underflow shows in bit 6
     reg  [5:0]  code_next; // output code for next cycle
  
@@ -28,9 +33,19 @@ module pi_filter (
      // Integral path: step down if early, up if late, stop at the ends
     always @(*) begin
         if (early)
-            acc_next = (acc >= ki_step) ? acc - ki_step : 12'd0;
+            acc_pi = (acc >= ki_step) ? acc - ki_step : 12'd0;
         else
-            acc_next = (acc <= IMAX - ki_step) ? acc + ki_step : IMAX;
+            acc_pi = (acc <= IMAX - ki_step) ? acc + ki_step : IMAX;
+    end
+
+    // Frequency-acquisition nudge: one whole code, also clamped at the ends
+    always @(*) begin
+        if (nudge_up && !nudge_dn)
+            acc_next = (acc_pi <= IMAX - NUDGE) ? acc_pi + NUDGE : IMAX;
+        else if (nudge_dn && !nudge_up)
+            acc_next = (acc_pi >= NUDGE) ? acc_pi - NUDGE : 12'd0;
+        else
+            acc_next = acc_pi;
     end
     
     // Proportional path

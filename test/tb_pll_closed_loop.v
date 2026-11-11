@@ -2,7 +2,7 @@
 `default_nettype none
 
 // Closed-loop sim: real pll_digital RTL + behavioral DAC (0-2 V) and VCO (~2 MHz/code; code 32 = 80 MHz is assumed).
-// Sweep 1: corners x KP/KI table (CI enforces tt only). Sweep 2: capture grid (o = locks, f = false LOCK, x = no lock).
+// Sweep 1: corners x KP/KI table. Sweep 2: capture grid (o = locks, f = false LOCK, x = no lock). CI enforces KP_SEL 0-2.
 // Run: test/run_unit_tests.sh pll_closed_loop   Results: test/sim_build/unit/tb_pll_closed_loop.log
 module tb_pll_closed_loop;
 
@@ -21,14 +21,15 @@ module tb_pll_closed_loop;
     localparam integer LOCK_SPEC  = 1000;  // lock time spec, reference cycles
 
     localparam integer N_CORNERS  = 3;
-    localparam integer STRICT_CORNERS = 0;     // 1 = ss / ff must pass too
+    localparam integer STRICT_CORNERS = 1;     // 1 = ss / ff must pass too
+    localparam integer MAX_ENFORCED_KP = 2;    // KP_SEL 3 (8 codes = ~16 MHz kicks) is reported only
     localparam real    FALSE_LOCK_TOL = 0.05;  // ~2 DAC codes (1 code = ~2.5 % of 80 MHz)
     localparam real    SETTLE_TOL     = 0.0025;
     localparam real    PHASE_TOL_NS   = 25.0;  // mean |CLK_OUT - ref| edge offset
 
     localparam integer CAP_MAX_PCT  = 20;      // capture sweep: -20 % .. +20 %
     localparam integer CAP_STEP_PCT = 2;
-    localparam integer CAP_MIN_PCT  = 6;       // KP_SEL = 0 must capture +/-6 %
+    localparam integer CAP_MIN_PCT  = 20;      // enforced KP_SEL rows must capture +/-20 %
 
     // ------------------------------------------------------------------
     // DUT and analog model
@@ -196,9 +197,8 @@ module tb_pll_closed_loop;
                 1: begin corner = 0.8; cname = "ss"; end
                 2: begin corner = 1.2; cname = "ff"; end
             endcase
-            enforce = (c == 0) || (STRICT_CORNERS != 0);
-
             for (kp = 0; kp < 4; kp = kp + 1) begin
+                enforce = ((c == 0) || (STRICT_CORNERS != 0)) && (kp <= MAX_ENFORCED_KP);
                 for (ki = 0; ki < 4; ki = ki + 1) begin
                     do_run(kp, ki);
 
@@ -275,11 +275,20 @@ module tb_pll_closed_loop;
                         below_ok = 1'b0;
                 end
 
-                if (kp == 0 && (cap_lo > -CAP_MIN_PCT || cap_hi < CAP_MIN_PCT)) begin
-                    errors = errors + 1;
-                    flag_str = "  <-- ERROR: capture below +/-CAP_MIN_PCT";
+                // enforced rows: full capture range, and no false lock anywhere
+                flag_str = "";
+                if (kp <= MAX_ENFORCED_KP) begin
+                    if (cap_lo > -CAP_MIN_PCT || cap_hi < CAP_MIN_PCT) begin
+                        errors = errors + 1;
+                        flag_str = {flag_str, "  <-- ERROR: capture below +/-CAP_MIN_PCT"};
+                    end
+                    for (off = 0; off <= 2 * CAP_MAX_PCT / CAP_STEP_PCT; off = off + 1)
+                        if (grid[8*(off * 4) +: 8] == "f") begin
+                            errors = errors + 1;
+                            flag_str = {flag_str, "  <-- ERROR: false lock"};
+                        end
                 end else begin
-                    flag_str = "";
+                    flag_str = "  (reported only)";
                 end
 
                 $display(" %0d  %0d |%0s | %+0d%% .. %+0d%%%0s", kp, ki, grid, cap_lo, cap_hi, flag_str);

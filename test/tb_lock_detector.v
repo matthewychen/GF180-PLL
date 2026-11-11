@@ -18,6 +18,7 @@ module tb_lock_detector;
     reg  clk   = 1'b0;
     reg  rst_n = 1'b0;
     reg  early = 1'b0;
+    reg  freq_ok = 1'b1;   // from freq_acq; high except in tests 10-11
     wire lock;
 
     integer errors = 0;
@@ -30,6 +31,7 @@ module tb_lock_detector;
         .clk  (clk),
         .rst_n(rst_n),
         .early(early),
+        .freq_ok(freq_ok),
         .lock (lock)
     );
 
@@ -176,6 +178,29 @@ module tb_lock_detector;
         #10 rst_n = 1'b0;
         #1  expect_lock(1'b0, "lock not cleared by async reset");
         rst_n = 1'b1;
+
+        // 10. Wrong frequency blocks lock, even with perfect short runs ------
+        // (this is the beat-pattern false lock the run-length check can't see)
+        $display("[10] freq_ok low: never locks");
+        do_reset;
+        freq_ok = 1'b0;
+        send_runs(1, 4 * LOCK_CYCLES, 1'b1);
+        freq_ok = 1'b1;
+
+        // 11. Losing freq_ok drops lock at once; regaining it needs a full
+        //     LOCK_CYCLES of good samples again
+        $display("[11] locked, freq_ok drops for one sample, then re-acquire");
+        do_reset;
+        send_runs(1, LOCK_CYCLES, 1'b0);
+        expect_lock(1'b1, "setup: not locked");
+        freq_ok = 1'b0;
+        send_runs(1, 1, 1'b0);
+        expect_lock(1'b0, "lock kept while freq_ok low");
+        freq_ok = 1'b1;
+        send_runs(1, LOCK_CYCLES - 1, 1'b1);
+        expect_lock(1'b0, "re-lock too early after freq_ok returned");
+        send_runs(1, 1, 1'b0);
+        expect_lock(1'b1, "no re-lock after freq_ok returned");
 
         // ------------------------------------------------------------------
         // run_unit_tests.sh needs a line that is exactly "PASS", and a

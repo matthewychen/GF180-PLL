@@ -11,6 +11,8 @@ module tb_pi_filter;
     reg        early  = 1'b0;
     reg  [1:0] kp_sel = 2'd0;
     reg  [1:0] ki_sel = 2'd0;
+    reg        nudge_up = 1'b0;
+    reg        nudge_dn = 1'b0;
     wire [5:0] code;
     wire [5:0] integ;
 
@@ -20,6 +22,8 @@ module tb_pi_filter;
         .early (early),
         .kp_sel(kp_sel),
         .ki_sel(ki_sel),
+        .nudge_up(nudge_up),
+        .nudge_dn(nudge_dn),
         .code  (code),
         .integ (integ)
     );
@@ -117,8 +121,71 @@ module tb_pi_filter;
             errors = errors + 1;
         end
 
+        // Test 6: frequency-acquisition nudges move the integrator by one
+        // whole code (64/64) on top of the normal PI step. Kp = 1, Ki = 1/64.
+        kp_sel = 2'd0;
+        ki_sel = 2'd0;
+
+        // late + nudge_up: integrator 2048 + 1 + 64 = 2113 -> 33, code 33 + 1
+        early = 1'b0;
+        do_reset;
+        nudge_up = 1'b1;
+        @(negedge clk);
+        nudge_up = 1'b0;
+        expect_code(6'd34);
+        if (integ !== 6'd33) begin
+            $display("FAIL: nudge_up gave integrator %0d, expected 33", integ);
+            errors = errors + 1;
+        end
+
+        // early + nudge_dn: integrator 2048 - 1 - 64 = 1983 -> 30, code 30 - 1
+        early = 1'b1;
+        do_reset;
+        nudge_dn = 1'b1;
+        @(negedge clk);
+        nudge_dn = 1'b0;
+        expect_code(6'd29);
+        if (integ !== 6'd30) begin
+            $display("FAIL: nudge_dn gave integrator %0d, expected 30", integ);
+            errors = errors + 1;
+        end
+
+        // both at once: ignored, normal PI step only (2048 + 1 -> 32, code 33)
+        early = 1'b0;
+        do_reset;
+        nudge_up = 1'b1;
+        nudge_dn = 1'b1;
+        @(negedge clk);
+        nudge_up = 1'b0;
+        nudge_dn = 1'b0;
+        expect_code(6'd33);
+
+        // nudge_up at the top must clamp, not wrap
+        ki_sel = 2'd3;
+        early  = 1'b0;
+        do_reset;
+        for (i = 0; i < 300; i = i + 1) @(negedge clk);
+        nudge_up = 1'b1;
+        @(negedge clk);
+        nudge_up = 1'b0;
+        if (integ !== 6'd63) begin
+            $display("FAIL: nudge_up at the top wrapped the integrator to %0d", integ);
+            errors = errors + 1;
+        end
+
+        // nudge_dn at the bottom must clamp, not wrap
+        early = 1'b1;
+        for (i = 0; i < 600; i = i + 1) @(negedge clk);
+        nudge_dn = 1'b1;
+        @(negedge clk);
+        nudge_dn = 1'b0;
+        if (integ !== 6'd0) begin
+            $display("FAIL: nudge_dn at the bottom wrapped the integrator to %0d", integ);
+            errors = errors + 1;
+        end
+
         if (errors == 0) begin
-            $display("All checks passed: reset, Kp steps, lock bounce and saturation");
+            $display("All checks passed: reset, Kp steps, lock bounce, saturation and nudges");
             $display("PASS");
         end else
             $display("FAILED with %0d errors", errors);

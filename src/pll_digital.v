@@ -2,7 +2,10 @@
 `default_nettype none
 
 //   clk (10 MHz ref) ──► phase_detector ──► sync (negedge) ──► early ──┬──► pi_filter ──► code[5:0] ──► DAC
-//                             ▲                                       └──► lock_detector ──► lock
+//                             ▲                                       │       ▲ nudge_up/dn
+//                             │                                       └──► lock_detector ──► lock
+//                             │                    freq_acq ──────────────────┘ freq_ok   ▲
+//                             │                       ▲ (counts vco_clk per 32 ref cycles)
 //                             └── fb_clk ◄── fb_divider (/8) ◄── vco_clk (80 MHz) ◄── VCO
 //
 // Clock domains: everything runs on clk except fb_divider, which runs on vco_clk.
@@ -22,6 +25,7 @@ module pll_digital (
     wire fb_clk;
     wire early_raw;
     wire early;
+    wire nudge_up, nudge_dn, freq_ok;
 
     fb_divider u_fb_divider (
         .vco_clk(vco_clk),
@@ -46,6 +50,15 @@ module pll_digital (
     end
     assign early = early_sync;
 
+    freq_acq u_freq_acq (
+        .clk     (clk),
+        .rst_n   (rst_n),
+        .vco_clk (vco_clk),
+        .nudge_up(nudge_up),
+        .nudge_dn(nudge_dn),
+        .freq_ok (freq_ok)
+    );
+
     // verilator lint_off PINCONNECTEMPTY
     pi_filter u_pi_filter (
         .clk   (clk),
@@ -53,6 +66,8 @@ module pll_digital (
         .early (early),
         .kp_sel(kp_sel),
         .ki_sel(ki_sel),
+        .nudge_up(nudge_up),
+        .nudge_dn(nudge_dn),
         .code  (code),
         .integ ()           // not used at the top level
     );
@@ -61,8 +76,9 @@ module pll_digital (
     lock_detector u_lock_detector (
         .clk  (clk),
         .rst_n(rst_n),
-        .early(early),
-        .lock (lock)
+        .early  (early),
+        .freq_ok(freq_ok),
+        .lock   (lock)
     );
 
     assign clk_out = fb_clk;
