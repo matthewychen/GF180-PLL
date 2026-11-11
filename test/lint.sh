@@ -26,6 +26,7 @@ VERILATOR_FLAGS=(--lint-only -Wall -Wno-DECLFILENAME --timescale 1ns/1ps)
 fail=0
 
 # Verilator 5 (used in CI) rejects files without a final newline (EOFNEWLINE);
+# Verilator 4 doesn't check, so check here to catch it locally too.
 for f in "${src_files[@]}"; do
     if [ -s "$f" ] && [ -n "$(tail -c1 "$f")" ]; then
         echo "FAIL  $(basename "$f")  (missing newline at end of file)"
