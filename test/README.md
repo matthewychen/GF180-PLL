@@ -46,7 +46,7 @@ A testbench fails CI if it doesn't compile, exits non-zero, runs longer than 300
 ## Closed-loop simulation (`tb_pll_closed_loop.v`)
 
 `src/pll_digital.v` is the digital core that gets hardened with OpenLane: phase detector,
-synchronizer, PI filter, feedback divider and lock detector. `tb_pll_closed_loop.v` wraps it with a
+synchronizer, PI filter, feedback divider, frequency-acquisition helper and lock detector. `tb_pll_closed_loop.v` wraps it with a
 behavioral DAC and VCO model and sweeps every `KP_SEL`/`KI_SEL` setting at the tt, ss and ff corners.
 For each run it prints lock time, frequency error, code dither and CLK_OUT phase alignment.
 
@@ -60,11 +60,9 @@ The DAC and VCO numbers at the top of the testbench are the updated design value
 Matthew's measured frequency-vs-VCTRL curve once it exists.
 
 A second sweep prints a **capture-range grid**: how far the VCO can start from 80 MHz and still lock, for each
-KP_SEL. `o` = locks, `f` = locks but LOCK rose too early, `x` = never locks. CI fails if KP_SEL = 0 can no longer
-capture ±`CAP_MIN_PCT`.
+KP_SEL. `o` = locks, `f` = locks but LOCK rose too early, `x` = never locks.
 
-CI enforces the tt corner. The ss/ff rows are printed as `KNOWN ISSUE`: with a ±20% VCO spread the
-loop can't pull in, and the lock detector false-locks. Set `STRICT_CORNERS = 1` once frequency
-acquisition is fixed.
+CI enforces every corner and the full ±20% capture range for KP_SEL 0–2: no false LOCK, settles on 80 MHz, and
+phase-aligned. KP_SEL = 3 (about 16 MHz kicks) is printed but not enforced.
 
 `src/project.v` is only the port stub for the custom GDS, so it isn't simulated.

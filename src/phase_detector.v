@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module phase_detector_deadband #(
     parameter DEADBAND = 2,
     parameter CNT_W = 8

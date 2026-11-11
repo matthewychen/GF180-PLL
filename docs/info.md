@@ -21,7 +21,9 @@ The loop is made of five blocks:
 
 The phase detector's decision is synchronized on the falling edge of `clk` before the filter uses it. That protects against metastability without adding a cycle of loop delay.
 
-A **lock detector** watches the EARLY stream. While the loop is acquiring frequency, the phase detector makes long runs of identical decisions. Once the loop is locked, the decisions dither back and forth. LOCK goes high after 256 consecutive reference cycles in which no run of identical decisions was longer than 8. It drops again as soon as a longer run appears.
+A **frequency-acquisition helper** handles large frequency errors, which the phase detector can't see. Every 32 reference cycles it counts VCO cycles (256 expected at 80 MHz). If the count is more than about 4% off, it nudges the filter's integrator one code in the right direction. Once the VCO is close, the bang-bang loop finishes the lock.
+
+A **lock detector** watches the EARLY stream. While the loop is acquiring frequency, the phase detector makes long runs of identical decisions. Once the loop is locked, the decisions dither back and forth. LOCK goes high after 256 consecutive reference cycles in which no run of identical decisions was longer than 8 **and** the VCO count stayed within about 2% of 256. It drops as soon as either check fails. The count check stops LOCK from rising when the loop is far off frequency. In that case the beat between the two clocks also gives short runs.
 
 ## How to test
 
@@ -61,12 +63,13 @@ KP_SEL = 0 is the intended operating point. The larger settings are kept for exp
 but dither more. Common ways to reduce dither further, such as gear shifting or a finer proportional tuning path, were
 considered and not implemented.
 
-### Known issue: frequency acquisition and false LOCK
+### Frequency acquisition
 
-The phase detector samples the feedback clock, so it can't detect a frequency error. In simulation the loop only pulls in
-when the VCO starts within about −8% to +12% of 80 MHz (KP_SEL = 0). Outside that range it never locks, and the lock
-detector can still raise LOCK because the beat pattern looks like normal dither. The ±20% corner rows in
-`test/tb_pll_closed_loop.v` show this. A counter-based frequency-acquisition step is being considered as the fix.
+The phase detector samples the feedback clock, so on its own it can't detect a frequency error. Without help, the loop only
+pulled in when the VCO started within about −8% to +12% of 80 MHz. Outside that range it never locked, and the lock
+detector falsely raised LOCK. The frequency-acquisition helper (`src/freq_acq.v`) fixes both. In simulation, KP_SEL 0–2
+now lock from anywhere in ±20%, with no false LOCK, in about 400–650 reference cycles at the ±20% corners. KP_SEL = 3
+(8-code, ~16 MHz kicks) still fails occasionally and is for experiments only.
 
 ## External hardware
 
