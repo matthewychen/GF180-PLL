@@ -63,9 +63,10 @@ module tb_fb_divider;
             errors = errors + 1;
         end
 
-        if (errors == 0)
+        if (errors == 0) begin
             $display("PASS: fb_clk is 10 MHz with 50%% duty cycle");
-        else
+            $display("PASS");
+        end else
             $display("FAILED with %0d errors", errors);
 
         $finish;
