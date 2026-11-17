@@ -1,0 +1,14 @@
+{
+  "DESIGN_NAME": "pll_digital",
+  "VERILOG_FILES": [
+    "dir::../src/pll_digital.v", "dir::../src/fb_divider.v",
+    "dir::../src/phase_detector.v", "dir::../src/freq_acq.v",
+    "dir::../src/pi_filter.v", "dir::../src/lock_detector.v"
+  ],
+  "CLOCK_PORT": ["clk", "vco_clk"],
+  "CLOCK_PERIOD": 9,
+  "PNR_SDC_FILE": "dir::pll_digital.sdc",
+  "SIGNOFF_SDC_FILE": "dir::pll_digital.sdc",
+  "FP_SIZING": "absolute",
+  "DIE_AREA": [0, 0, 220, 200]
+}
