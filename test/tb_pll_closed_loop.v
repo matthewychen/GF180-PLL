@@ -64,13 +64,26 @@ module tb_pll_closed_loop;
         fvco_of = corner * (F_MIN + KVCO * (vctrl_of(c) - V_MIN));
     endfunction
 
-    // Average VCO frequency, from the PI filter's integrator (12-bit, 6
-    // fractional bits). The output code also carries the proportional kick,
-    // so it swings +/-Kp codes every cycle even when the loop is locked.
-    function real favg_now(input dummy);
-        favg_now = corner * (F_MIN + KVCO * (V_MAX - V_MIN) / 63.0
-                             * (dut.u_pi_filter.acc / 64.0));
-    endfunction
+    `ifdef GLS
+        // Gate-level netlist is flattened: dut.u_pi_filter.acc doesn't exist.
+        // Estimate the average VCO frequency by low-pass filtering fvco_of(code)
+        // once per reference cycle. At lock, code swings +/-Kp evenly around the
+        // integrator, so this average tracks it.
+        real favg_ema = 80.0e6;
+        always @(posedge clk) favg_ema = favg_ema + (fvco_of(code) - favg_ema) / 16.0;
+
+        function real favg_now(input dummy);
+            favg_now = favg_ema;
+        endfunction
+    `else
+        // Average VCO frequency, from the PI filter's integrator (12-bit, 6
+        // fractional bits). The output code also carries the proportional kick,
+        // so it swings +/-Kp codes every cycle even when the loop is locked.
+        function real favg_now(input dummy);
+            favg_now = corner * (F_MIN + KVCO * (V_MAX - V_MIN) / 63.0
+                                * (dut.u_pi_filter.acc / 64.0));
+        endfunction
+    `endif
 
     // Reference: 10 MHz
     always #50 clk = ~clk;
