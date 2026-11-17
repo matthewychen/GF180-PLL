@@ -1,0 +1,265 @@
+VERSION 5.7 ;
+  NOWIREEXTENSIONATPIN ON ;
+  DIVIDERCHAR "/" ;
+  BUSBITCHARS "[]" ;
+MACRO pi_filter
+  CLASS BLOCK ;
+  FOREIGN pi_filter ;
+  ORIGIN 0.000 0.000 ;
+  SIZE 160.000 BY 120.000 ;
+  PIN VDD
+    DIRECTION INOUT ;
+    USE POWER ;
+    PORT
+      LAYER Metal4 ;
+        RECT 22.240 15.380 23.840 102.220 ;
+    END
+    PORT
+      LAYER Metal5 ;
+        RECT 6.720 31.530 152.880 33.130 ;
+    END
+  END VDD
+  PIN VSS
+    DIRECTION INOUT ;
+    USE GROUND ;
+    PORT
+      LAYER Metal4 ;
+        RECT 25.540 15.380 27.140 102.220 ;
+    END
+    PORT
+      LAYER Metal5 ;
+        RECT 6.720 34.830 152.880 36.430 ;
+    END
+  END VSS
+  PIN clk
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 4.738000 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 97.440 0.560 98.000 ;
+    END
+  END clk
+  PIN code[0]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 81.760 160.000 82.320 ;
+    END
+  END code[0]
+  PIN code[1]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 79.520 160.000 80.080 ;
+    END
+  END code[1]
+  PIN code[2]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 97.440 160.000 98.000 ;
+    END
+  END code[2]
+  PIN code[3]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 113.120 119.440 113.680 120.000 ;
+    END
+  END code[3]
+  PIN code[4]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 86.240 160.000 86.800 ;
+    END
+  END code[4]
+  PIN code[5]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 92.960 160.000 93.520 ;
+    END
+  END code[5]
+  PIN early
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.498500 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 129.920 119.440 130.480 120.000 ;
+    END
+  END early
+  PIN integ[0]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 70.560 160.000 71.120 ;
+    END
+  END integ[0]
+  PIN integ[1]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 50.400 160.000 50.960 ;
+    END
+  END integ[1]
+  PIN integ[2]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 47.040 0.560 47.600 ;
+    END
+  END integ[2]
+  PIN integ[3]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 73.920 160.000 74.480 ;
+    END
+  END integ[3]
+  PIN integ[4]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 69.440 160.000 70.000 ;
+    END
+  END integ[4]
+  PIN integ[5]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 0.897600 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 66.080 160.000 66.640 ;
+    END
+  END integ[5]
+  PIN ki_sel[0]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.498500 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 34.720 0.000 35.280 0.560 ;
+    END
+  END ki_sel[0]
+  PIN ki_sel[1]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.498500 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 35.840 0.000 36.400 0.560 ;
+    END
+  END ki_sel[1]
+  PIN kp_sel[0]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.498500 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 85.120 0.560 85.680 ;
+    END
+  END kp_sel[0]
+  PIN kp_sel[1]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.498500 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 86.240 0.560 86.800 ;
+    END
+  END kp_sel[1]
+  PIN nudge_dn
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.498500 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 53.760 0.560 54.320 ;
+    END
+  END nudge_dn
+  PIN nudge_up
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.498500 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 52.640 0.560 53.200 ;
+    END
+  END nudge_up
+  PIN rst_n
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 0.498500 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 159.440 31.360 160.000 31.920 ;
+    END
+  END rst_n
+  OBS
+      LAYER Nwell ;
+        RECT 6.290 15.250 153.310 102.350 ;
+      LAYER Metal1 ;
+        RECT 6.720 15.380 152.880 102.220 ;
+      LAYER Metal2 ;
+        RECT 8.540 119.140 112.820 119.860 ;
+        RECT 113.980 119.140 129.620 119.860 ;
+        RECT 130.780 119.140 151.620 119.860 ;
+        RECT 8.540 0.860 151.620 119.140 ;
+        RECT 8.540 0.560 34.420 0.860 ;
+        RECT 36.700 0.560 151.620 0.860 ;
+      LAYER Metal3 ;
+        RECT 0.560 98.300 159.440 102.060 ;
+        RECT 0.860 97.140 159.140 98.300 ;
+        RECT 0.560 93.820 159.440 97.140 ;
+        RECT 0.560 92.660 159.140 93.820 ;
+        RECT 0.560 87.100 159.440 92.660 ;
+        RECT 0.860 85.940 159.140 87.100 ;
+        RECT 0.860 84.820 159.440 85.940 ;
+        RECT 0.560 82.620 159.440 84.820 ;
+        RECT 0.560 81.460 159.140 82.620 ;
+        RECT 0.560 80.380 159.440 81.460 ;
+        RECT 0.560 79.220 159.140 80.380 ;
+        RECT 0.560 74.780 159.440 79.220 ;
+        RECT 0.560 73.620 159.140 74.780 ;
+        RECT 0.560 71.420 159.440 73.620 ;
+        RECT 0.560 69.140 159.140 71.420 ;
+        RECT 0.560 66.940 159.440 69.140 ;
+        RECT 0.560 65.780 159.140 66.940 ;
+        RECT 0.560 54.620 159.440 65.780 ;
+        RECT 0.860 52.340 159.440 54.620 ;
+        RECT 0.560 51.260 159.440 52.340 ;
+        RECT 0.560 50.100 159.140 51.260 ;
+        RECT 0.560 47.900 159.440 50.100 ;
+        RECT 0.860 46.740 159.440 47.900 ;
+        RECT 0.560 32.220 159.440 46.740 ;
+        RECT 0.560 31.060 159.140 32.220 ;
+        RECT 0.560 15.540 159.440 31.060 ;
+  END
+END pi_filter
+END LIBRARY
+
