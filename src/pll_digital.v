@@ -26,6 +26,11 @@ module pll_digital (
     wire early_raw;
     wire early;
     wire nudge_up, nudge_dn, freq_ok;
+    wire [5:0] code_pi;   // PI filter output: higher = faster VCO
+
+    // VCO is PMOS-controlled: higher VCTRL = lower frequency, so invert the code
+    // (63 - code_pi) on the way to the DAC.
+    assign code = ~code_pi;
 
     fb_divider u_fb_divider (
         .vco_clk(vco_clk),
@@ -68,7 +73,7 @@ module pll_digital (
         .ki_sel(ki_sel),
         .nudge_up(nudge_up),
         .nudge_dn(nudge_dn),
-        .code  (code),
+        .code  (code_pi),
         .integ ()           // not used at the top level
     );
     /* verilator lint_on PINCONNECTEMPTY */

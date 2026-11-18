@@ -61,7 +61,7 @@ module tb_pll_closed_loop;
     endfunction
 
     function real fvco_of(input [5:0] c);
-        fvco_of = corner * (F_MIN + KVCO * (vctrl_of(c) - V_MIN));
+        fvco_of = corner * (F_MIN + KVCO * (V_MAX - vctrl_of(c)));
     endfunction
 
     `ifdef GLS

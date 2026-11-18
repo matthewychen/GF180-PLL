@@ -6,9 +6,18 @@
     "dir::../src/pi_filter.v", "dir::../src/lock_detector.v"
   ],
   "CLOCK_PORT": ["clk", "vco_clk"],
-  "CLOCK_PERIOD": 9,
+  "CLOCK_PERIOD": 11,
   "PNR_SDC_FILE": "dir::pll_digital.sdc",
   "SIGNOFF_SDC_FILE": "dir::pll_digital.sdc",
   "FP_SIZING": "absolute",
-  "DIE_AREA": [0, 0, 220, 200]
+  "DIE_AREA": [0, 0, 220, 200],
+  "FP_PDN_MULTILAYER": false,
+  "RT_MAX_LAYER": "Metal4",
+  "DEFAULT_CORNER": "nom_tt_025C_3v30",
+  "STA_CORNERS": ["nom_tt_025C_3v30", "nom_ss_125C_3v00", "nom_ff_n40C_3v60"],
+  "LIB": {
+    "*_tt_025C_3v30": ["pdk_dir::libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib.gz"],
+    "*_ss_125C_3v00": ["pdk_dir::libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ss_125C_3v00.lib.gz"],
+    "*_ff_n40C_3v60": ["pdk_dir::libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ff_n40C_3v60.lib.gz"]
+  }
 }

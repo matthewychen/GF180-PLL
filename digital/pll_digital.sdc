@@ -1,5 +1,5 @@
 create_clock -name clk     -period 100 [get_ports clk]
-create_clock -name vco_clk -period 9   [get_ports vco_clk]
+create_clock -name vco_clk -period 11  [get_ports vco_clk]
 set_clock_groups -asynchronous -group {clk} -group {vco_clk}
 set_clock_uncertainty 0.25 [all_clocks]
 set_clock_transition 0.15 [all_clocks]

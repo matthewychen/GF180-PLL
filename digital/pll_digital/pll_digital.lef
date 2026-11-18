@@ -18,10 +18,6 @@ MACRO pll_digital
       LAYER Metal4 ;
         RECT 175.840 15.380 177.440 184.540 ;
     END
-    PORT
-      LAYER Metal5 ;
-        RECT 6.720 31.530 212.800 33.130 ;
-    END
   END VDD
   PIN VSS
     DIRECTION INOUT ;
@@ -33,10 +29,6 @@ MACRO pll_digital
     PORT
       LAYER Metal4 ;
         RECT 179.140 15.380 180.740 184.540 ;
-    END
-    PORT
-      LAYER Metal5 ;
-        RECT 6.720 34.830 212.800 36.430 ;
     END
   END VSS
   PIN clk
@@ -54,7 +46,7 @@ MACRO pll_digital
     ANTENNADIFFAREA 0.897600 ;
     PORT
       LAYER Metal3 ;
-        RECT 0.000 122.080 0.560 122.640 ;
+        RECT 0.000 90.720 0.560 91.280 ;
     END
   END clk_out
   PIN code[0]
@@ -63,7 +55,7 @@ MACRO pll_digital
     ANTENNADIFFAREA 0.897600 ;
     PORT
       LAYER Metal3 ;
-        RECT 219.440 157.920 220.000 158.480 ;
+        RECT 219.440 142.240 220.000 142.800 ;
     END
   END code[0]
   PIN code[1]
@@ -71,8 +63,8 @@ MACRO pll_digital
     USE SIGNAL ;
     ANTENNADIFFAREA 0.897600 ;
     PORT
-      LAYER Metal2 ;
-        RECT 159.040 199.440 159.600 200.000 ;
+      LAYER Metal3 ;
+        RECT 219.440 144.480 220.000 145.040 ;
     END
   END code[1]
   PIN code[2]
@@ -80,8 +72,8 @@ MACRO pll_digital
     USE SIGNAL ;
     ANTENNADIFFAREA 0.897600 ;
     PORT
-      LAYER Metal2 ;
-        RECT 164.640 199.440 165.200 200.000 ;
+      LAYER Metal3 ;
+        RECT 219.440 148.960 220.000 149.520 ;
     END
   END code[2]
   PIN code[3]
@@ -90,7 +82,7 @@ MACRO pll_digital
     ANTENNADIFFAREA 0.897600 ;
     PORT
       LAYER Metal3 ;
-        RECT 219.440 163.520 220.000 164.080 ;
+        RECT 219.440 147.840 220.000 148.400 ;
     END
   END code[3]
   PIN code[4]
@@ -99,7 +91,7 @@ MACRO pll_digital
     ANTENNADIFFAREA 0.897600 ;
     PORT
       LAYER Metal3 ;
-        RECT 219.440 150.080 220.000 150.640 ;
+        RECT 219.440 122.080 220.000 122.640 ;
     END
   END code[4]
   PIN code[5]
@@ -108,7 +100,7 @@ MACRO pll_digital
     ANTENNADIFFAREA 0.897600 ;
     PORT
       LAYER Metal3 ;
-        RECT 219.440 131.040 220.000 131.600 ;
+        RECT 219.440 138.880 220.000 139.440 ;
     END
   END code[5]
   PIN ki_sel[0]
@@ -117,7 +109,7 @@ MACRO pll_digital
     ANTENNAGATEAREA 0.498500 ;
     PORT
       LAYER Metal2 ;
-        RECT 154.560 0.000 155.120 0.560 ;
+        RECT 106.400 0.000 106.960 0.560 ;
     END
   END ki_sel[0]
   PIN ki_sel[1]
@@ -126,7 +118,7 @@ MACRO pll_digital
     ANTENNAGATEAREA 0.498500 ;
     PORT
       LAYER Metal2 ;
-        RECT 156.800 0.000 157.360 0.560 ;
+        RECT 105.280 0.000 105.840 0.560 ;
     END
   END ki_sel[1]
   PIN kp_sel[0]
@@ -135,7 +127,7 @@ MACRO pll_digital
     ANTENNAGATEAREA 0.498500 ;
     PORT
       LAYER Metal3 ;
-        RECT 219.440 128.800 220.000 129.360 ;
+        RECT 219.440 114.240 220.000 114.800 ;
     END
   END kp_sel[0]
   PIN kp_sel[1]
@@ -144,7 +136,7 @@ MACRO pll_digital
     ANTENNAGATEAREA 0.498500 ;
     PORT
       LAYER Metal3 ;
-        RECT 219.440 129.920 220.000 130.480 ;
+        RECT 219.440 110.880 220.000 111.440 ;
     END
   END kp_sel[1]
   PIN lock
@@ -153,7 +145,7 @@ MACRO pll_digital
     ANTENNADIFFAREA 0.897600 ;
     PORT
       LAYER Metal2 ;
-        RECT 86.240 199.440 86.800 200.000 ;
+        RECT 143.360 199.440 143.920 200.000 ;
     END
   END lock
   PIN rst_n
@@ -162,7 +154,7 @@ MACRO pll_digital
     ANTENNAGATEAREA 1.102000 ;
     PORT
       LAYER Metal3 ;
-        RECT 219.440 28.000 220.000 28.560 ;
+        RECT 219.440 43.680 220.000 44.240 ;
     END
   END rst_n
   PIN vco_clk
@@ -171,7 +163,7 @@ MACRO pll_digital
     ANTENNAGATEAREA 4.738000 ;
     PORT
       LAYER Metal3 ;
-        RECT 0.000 131.040 0.560 131.600 ;
+        RECT 0.000 162.400 0.560 162.960 ;
     END
   END vco_clk
   OBS
@@ -180,35 +172,39 @@ MACRO pll_digital
       LAYER Metal1 ;
         RECT 6.720 15.380 212.800 184.540 ;
       LAYER Metal2 ;
-        RECT 8.540 199.140 85.940 199.440 ;
-        RECT 87.100 199.140 158.740 199.440 ;
-        RECT 159.900 199.140 164.340 199.440 ;
-        RECT 165.500 199.140 212.100 199.440 ;
+        RECT 8.540 199.140 143.060 199.440 ;
+        RECT 144.220 199.140 212.100 199.440 ;
         RECT 8.540 0.860 212.100 199.140 ;
-        RECT 8.540 0.560 154.260 0.860 ;
-        RECT 155.420 0.560 156.500 0.860 ;
-        RECT 157.660 0.560 212.100 0.860 ;
+        RECT 8.540 0.560 104.980 0.860 ;
+        RECT 107.260 0.560 212.100 0.860 ;
       LAYER Metal3 ;
         RECT 0.560 175.580 219.440 184.380 ;
         RECT 0.860 174.420 219.440 175.580 ;
-        RECT 0.560 164.380 219.440 174.420 ;
-        RECT 0.560 163.220 219.140 164.380 ;
-        RECT 0.560 158.780 219.440 163.220 ;
-        RECT 0.560 157.620 219.140 158.780 ;
-        RECT 0.560 150.940 219.440 157.620 ;
-        RECT 0.560 149.780 219.140 150.940 ;
-        RECT 0.560 131.900 219.440 149.780 ;
-        RECT 0.860 130.740 219.140 131.900 ;
-        RECT 0.560 128.500 219.140 130.740 ;
-        RECT 0.560 122.940 219.440 128.500 ;
-        RECT 0.860 121.780 219.440 122.940 ;
-        RECT 0.560 28.860 219.440 121.780 ;
-        RECT 0.560 27.700 219.140 28.860 ;
-        RECT 0.560 15.540 219.440 27.700 ;
+        RECT 0.560 163.260 219.440 174.420 ;
+        RECT 0.860 162.100 219.440 163.260 ;
+        RECT 0.560 149.820 219.440 162.100 ;
+        RECT 0.560 147.540 219.140 149.820 ;
+        RECT 0.560 145.340 219.440 147.540 ;
+        RECT 0.560 144.180 219.140 145.340 ;
+        RECT 0.560 143.100 219.440 144.180 ;
+        RECT 0.560 141.940 219.140 143.100 ;
+        RECT 0.560 139.740 219.440 141.940 ;
+        RECT 0.560 138.580 219.140 139.740 ;
+        RECT 0.560 122.940 219.440 138.580 ;
+        RECT 0.560 121.780 219.140 122.940 ;
+        RECT 0.560 115.100 219.440 121.780 ;
+        RECT 0.560 113.940 219.140 115.100 ;
+        RECT 0.560 111.740 219.440 113.940 ;
+        RECT 0.560 110.580 219.140 111.740 ;
+        RECT 0.560 91.580 219.440 110.580 ;
+        RECT 0.860 90.420 219.440 91.580 ;
+        RECT 0.560 44.540 219.440 90.420 ;
+        RECT 0.560 43.380 219.140 44.540 ;
+        RECT 0.560 15.540 219.440 43.380 ;
       LAYER Metal4 ;
-        RECT 134.540 33.130 175.540 147.190 ;
-        RECT 177.740 33.130 178.840 147.190 ;
-        RECT 181.040 33.130 193.620 147.190 ;
+        RECT 120.540 47.690 175.540 71.590 ;
+        RECT 177.740 47.690 178.840 71.590 ;
+        RECT 181.040 47.690 195.860 71.590 ;
   END
 END pll_digital
 END LIBRARY
