@@ -1,0 +1,10 @@
+/* Generated code: do not edit. */
+VL_DATA(8,sample_clk,0,0)
+VL_DATA(8,phase_detector_deadband__02Erst_n,0,0)
+VL_DATA(8,pll_digital__02Eclk,0,0)
+VL_DATA(8,pll_digital__02Erst_n,0,0)
+VL_DATA(8,vco_clk,0,0)
+VL_DATA(8,phase_detector_deadband__02Eclk,0,0)
+VL_DATA(8,fb_clk,0,0)
+VL_DATA(8,kp_sel,1,0)
+VL_DATA(8,ki_sel,1,0)
