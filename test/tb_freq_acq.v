@@ -3,7 +3,7 @@
 
 // Testbench for freq_acq: drive vco_clk at a fixed frequency, count nudge
 // pulses over several windows and check freq_ok. Expected count is 256 per
-// 32-cycle window at 80 MHz; TOL_ACQ = 10 counts, TOL_LOCK = 6 counts.
+// 32-cycle window at 80 MHz; TOL_ACQ = TOL_LOCK = 6 counts.
 module tb_freq_acq;
 
     reg  clk     = 1'b0;
@@ -106,8 +106,8 @@ module tb_freq_acq;
         $display("[2] small error (-1.25 %%, ~-3 counts): bang-bang's job, freq_ok");
         run_at(79.0e6);   check(0, 0, 0, 0, 1);
 
-        $display("[3] between tolerances (~-8 counts): no nudge, not freq_ok");
-        run_at(77.5e6);   check(0, 0, 0, 0, 0);
+        $display("[3] just outside tolerance (~-8 counts): nudge_up once per window, not freq_ok");
+        run_at(77.5e6);   check(9, 11, 0, 0, 0);
 
         $display("[4] VCO 10 %% slow: nudge_up once per window");
         run_at(72.0e6);   check(9, 11, 0, 0, 0);
