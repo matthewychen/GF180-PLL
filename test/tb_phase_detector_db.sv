@@ -1,3 +1,6 @@
+// DISABLED: phase_detector_deadband was removed from src/phase_detector.v (it needs a sampling clock
+// much faster than we have). Kept for reference. A testbench with no module is skipped by run_unit_tests.sh.
+/*
 `default_nettype none
 `timescale 1ns / 1ps
 
@@ -12,7 +15,7 @@ module tb_phase_detector_db ();
      fb lags ref by more than DEADBAND  -> late  = 1
      fb leads ref by more than DEADBAND -> early = 1
      within DEADBAND                    -> early = late = 0
-  */
+  * /
 
   reg  sample_clk;
   reg  clk;
@@ -126,3 +129,5 @@ module tb_phase_detector_db ();
   end
 
 endmodule
+
+*/
