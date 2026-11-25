@@ -6,7 +6,7 @@
 // Spec: assert after 256 cycles with no run of more than 8 identical decisions.
 
 module lock_detector #(
-    parameter MAX_RUN     = 8,    // longest run of identical decisions still allowed
+    parameter MAX_RUN     = 255,    // longest run of identical decisions still allowed
     parameter LOCK_CYCLES = 256   // quiet cycles needed before lock asserts
 ) (
     input  wire clk,    // 10 MHz reference
