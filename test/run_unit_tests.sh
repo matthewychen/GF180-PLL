@@ -8,6 +8,7 @@
 #     instantiate any module there.
 #   - It must print a line that is exactly "PASS" on success, and call
 #     $fatal (or print anything else) on failure.
+#   - A testbench file with no module in it (fully commented out) is skipped.
 #
 # Usage (from anywhere):
 #   test/run_unit_tests.sh              # run all testbenches
@@ -57,7 +58,11 @@ for tb in "${tbs[@]}"; do
 
     if [ ! -f "$tb" ]; then
         result="FAIL (file not found)"
-    elif ! iverilog -g2012 -Wall -s "$name" -o "$vvp_file" "$tb" "${src_files[@]}" >"$log" 2>&1; then
+    elif ! perl -0pe 's{/\*.*?\*/}{}gs; s{//[^\n]*}{}g' "$tb" | grep -qE '^[[:space:]]*module[[:space:]]'; then
+        echo "SKIP  $name  (no module: commented out)"
+        summary+="| \`$name\` | SKIP |"$'\n'
+        continue
+    elif ! iverilog -g2012 -Wall -I "$TEST_DIR" -s "$name" -o "$vvp_file" "$tb" "${src_files[@]}" >"$log" 2>&1; then
         result="FAIL (compile error)"
     else
         # Run from test/ so $dumpfile paths land next to the testbench.

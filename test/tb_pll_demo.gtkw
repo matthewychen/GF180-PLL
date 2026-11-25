@@ -1,0 +1,81 @@
+[*]
+[*] GTKWave layout for tb_pll_demo. phase: 0 reset, 1 acquire, 2 hold, 3 freq step, 4 VCO stop/restart, 5 reset
+[*] Open from test/:  gtkwave tb_pll_demo.vcd tb_pll_demo.gtkw   then Time -> Zoom -> Zoom Best Fit
+[*]
+[timestart] 0
+[size] 1600 900
+[pos] -1 -1
+[treeopen] tb_pll_demo.
+[treeopen] tb_pll_demo.dut.
+[sst_width] 260
+[signals_width] 300
+[sst_expanded] 1
+[sst_vpaned_height] 200
+@800200
+-Story
+@24
+tb_pll_demo.phase[31:0]
+tb_pll_demo.cycle[31:0]
+@1000200
+-Story
+@800200
+-Clocks
+@28
+tb_pll_demo.clk
+tb_pll_demo.rst_n
+tb_pll_demo.vco_clk
+tb_pll_demo.clk_out
+@1000200
+-Clocks
+@800200
+-Loop
+@28
+tb_pll_demo.dut.early
+@8024
+tb_pll_demo.dut.code[5:0]
+@20200
+-
+-
+@8024
+tb_pll_demo.dut.u_pi_filter.integ[5:0]
+@20200
+-
+-
+@8420
+tb_pll_demo.vctrl_v
+@20200
+-
+-
+@1000200
+-Loop
+@800200
+-VCO (model)
+@8420
+tb_pll_demo.fvco_mhz
+@20200
+-
+-
+-
+@1000200
+-VCO (model)
+@800200
+-Frequency acquisition
+@28
+tb_pll_demo.dut.nudge_up
+tb_pll_demo.dut.nudge_dn
+tb_pll_demo.dut.freq_ok
+@1000200
+-Frequency acquisition
+@800200
+-Lock
+@28
+tb_pll_demo.lock
+@8420
+tb_pll_demo.phase_ns
+@20200
+-
+-
+@1000200
+-Lock
+[pattern_trace] 1
+[pattern_trace] 0
