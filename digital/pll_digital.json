@@ -15,6 +15,7 @@
   "RT_MAX_LAYER": "Metal4",
   "DEFAULT_CORNER": "nom_tt_025C_3v30",
   "STA_CORNERS": ["nom_tt_025C_3v30", "nom_ss_125C_3v00", "nom_ff_n40C_3v60"],
+  "SYNTH_STRATEGY": "DELAY 1",
   "LIB": {
     "*_tt_025C_3v30": ["pdk_dir::libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib.gz"],
     "*_ss_125C_3v00": ["pdk_dir::libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ss_125C_3v00.lib.gz"],
