@@ -31,6 +31,12 @@ N 460 -360 460 -330 {
 lab=GND}
 N 390 -270 390 -240 {
 lab=GND}
+N 290 -170 290 -140 {
+lab=GND}
+N 290 -300 290 -230 {
+lab=vctrl}
+N 210 -300 290 -300 {
+lab=vctrl}
 C {pll_dac/dac6.sym} 20 -330 0 0 {name=x1}
 C {lab_pin.sym} -130 -360 0 0 {name=p1 lab=b5,b4,b3,b2,b1,b0}
 C {lab_pin.sym} 170 -360 0 1 {name=p3 lab=vpad}
@@ -41,7 +47,7 @@ C {gnd.sym} -260 -280 0 0 {name=l2 lab=GND}
 C {vsource.sym} 390 -300 0 0 {name=V1 value=3.3 savecurrent=false}
 C {capa.sym} 210 -250 0 0 {name=C1
 m=1
-value=100f
+value=25f
 footprint=1206
 device="ceramic capacitor"}
 C {gnd.sym} 210 -190 0 0 {name=l3 lab=GND}
@@ -136,3 +142,9 @@ C {gnd.sym} -800 -70 0 0 {name=l8 lab=GND}
 C {gnd.sym} -800 40 0 0 {name=l9 lab=GND}
 C {gnd.sym} -800 170 0 0 {name=l10 lab=GND}
 C {gnd.sym} -800 280 0 0 {name=l11 lab=GND}
+C {capa.sym} 290 -200 0 0 {name=Cf
+m=1
+value=200f
+footprint=1206
+device="ceramic capacitor"}
+C {gnd.sym} 290 -140 0 0 {name=l12 lab=GND}
