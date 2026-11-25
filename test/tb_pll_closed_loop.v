@@ -1,11 +1,14 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-// Closed-loop sim: real pll_digital RTL + behavioral DAC (1.95 V - 30.9 mV x code) and VCO (Matthew's 5-point
+// Closed-loop sim: real pll_digital RTL + behavioral dac7 (1.95 V - 15.45 mV x 7-bit code) and VCO (Matthew's 5-point
 // freq-vs-VCTRL table per corner, linear between points; freq FALLS as VCTRL rises, so code up = freq up).
-// Sweep 1: corners x KP/KI table. Sweep 2: capture grid (o = locks, f = false LOCK, x = no lock). CI enforces KP_SEL 0-2.
+// Sweep 1: corners x KP/KI table. Sweep 2: capture grid (o = locks, f = false LOCK, x = no lock). CI enforces KP_SEL 0-2, KI_SEL 0-2.
+// ONE_SIDED_KP (default 1) matches pll_digital; -P tb_pll_closed_loop.ONE_SIDED_KP=0 runs the symmetric kick.
 // Run: test/run_unit_tests.sh pll_closed_loop   Results: test/sim_build/unit/tb_pll_closed_loop.log
-module tb_pll_closed_loop;
+module tb_pll_closed_loop #(
+    parameter ONE_SIDED_KP = 1   // override with iverilog -P tb_pll_closed_loop.ONE_SIDED_KP=0 for the symmetric kick
+);
 
     // ------------------------------------------------------------------
     // Model and test parameters
@@ -19,11 +22,13 @@ module tb_pll_closed_loop;
 
     localparam integer N_CORNERS  = 3;
     localparam integer STRICT_CORNERS = 1;     // 1 = ss / ff must pass too
-    localparam integer MAX_ENFORCED_KP = 2;    // KP_SEL 3 (8 codes = ~16 MHz kicks) is reported only
-    localparam integer MAX_ENFORCED_KI = 2;    // KI_SEL 3 stalls at a 2/3 or 4/3 subharmonic at ss/ff: open issue, see README
-    localparam real    FALSE_LOCK_TOL = 0.05;  // ~2 DAC codes (1 code = ~2.5 % of 80 MHz)
+    localparam integer MAX_ENFORCED_KP = 2;    // KP_SEL 3 (8 codes = ~8 MHz kicks) is reported only
+    localparam integer MAX_ENFORCED_KI = 2;    // KI_SEL 3 rings / never acquires at some corners: open issue, see README
+    localparam real    FALSE_LOCK_TOL = 0.05;  // ~4 DAC codes (1 code = ~1.25 % of 80 MHz)
     localparam real    SETTLE_TOL     = 0.0025;
     localparam real    PHASE_TOL_NS   = 25.0;  // mean |CLK_OUT - ref| edge offset
+    localparam real    DITHER_MAX_MV  = 124.0; // locked code swing, peak to peak (old spec +/-2 6-bit codes = +/-62 mV)
+    localparam real    INTEG_PP_MAX   = 2.0;   // integrator swing after lock, codes p-p: larger = slow ringing
 
     localparam integer CAP_MAX_PCT  = 34;      // capture sweep: -34 % .. +34 % (real corners sit at ~-32 % / +29 %)
     localparam integer CAP_STEP_PCT = 2;
@@ -37,11 +42,11 @@ module tb_pll_closed_loop;
     reg  [1:0] kp_sel  = 2'd0;
     reg  [1:0] ki_sel  = 2'd0;
     reg        vco_clk = 1'b0;
-    wire [5:0] code;
+    wire [6:0] code;
     wire       clk_out;
     wire       lock;
 
-    pll_digital dut (
+    pll_digital #(.ONE_SIDED_KP(ONE_SIDED_KP)) dut (
         .clk    (clk),
         .rst_n  (rst_n),
         .kp_sel (kp_sel),
@@ -54,15 +59,18 @@ module tb_pll_closed_loop;
 
     `include "pll_analog_model.vh"
 
-    function real fvco_of(input [5:0] c);
+    function real fvco_of(input [6:0] c);
         fvco_of = f_of_code(c);
     endfunction
 
-    // Average VCO frequency, from the PI filter's integrator (12-bit, 6
+    // Average VCO frequency, from the PI filter's integrator (12-bit, 5
     // fractional bits). The output code also carries the proportional kick,
     // so it swings +/-Kp codes every cycle even when the loop is locked.
+    // With the one-sided kick the mean code sits Kp/2 above the integrator
+    // (code = integrator + Kp/2 +/- Kp/2), so add that back.
     function real favg_now(input dummy);
-        favg_now = f_of_code(dut.u_pi_filter.acc / 64.0);
+        favg_now = f_of_code(dut.u_pi_filter.acc / ACC_PER_CODE
+                             + (ONE_SIDED_KP ? (1 << kp_sel) / 2.0 : 0.0));
     endfunction
 
     // Reference: 10 MHz
@@ -82,6 +90,7 @@ module tb_pll_closed_loop;
     real    ferr_at_lock;
     real    ferr_sum;
     integer code_min, code_max;
+    real    integ_min, integ_max, integ_now;
     integer drops;
     realtime t_fb_rise = 0;
     real    phase_ns;          // ref edge minus CLK_OUT edge, wrapped to +/-50 ns
@@ -100,6 +109,9 @@ module tb_pll_closed_loop;
                 ferr_sum = ferr_sum + (fvco_of(code) - F_TARGET) / F_TARGET;
                 if (code < code_min) code_min = code;
                 if (code > code_max) code_max = code;
+                integ_now = dut.u_pi_filter.acc / ACC_PER_CODE;
+                if (integ_now < integ_min) integ_min = integ_now;
+                if (integ_now > integ_max) integ_max = integ_now;
                 if (!lock) drops = drops + 1;
                 phase_ns = $realtime - t_fb_rise;
                 if (phase_ns > 50.0) phase_ns = phase_ns - 100.0;
@@ -117,7 +129,7 @@ module tb_pll_closed_loop;
     integer k;
     integer seed = 1;
     real    ferr_end;
-    reg     ok, settled, false_lock, dropped, misaligned, acquired;
+    reg     ok, settled, false_lock, dropped, misaligned, acquired, ringing;
 
     task do_run(input integer kp_v, input integer ki_v);
         begin
@@ -132,8 +144,10 @@ module tb_pll_closed_loop;
             lock_at       = -1;
             ferr_at_lock  = 0.0;
             ferr_sum      = 0.0;
-            code_min      = 63;
+            code_min      = 127;
             code_max      = 0;
+            integ_min     = 1.0e9;
+            integ_max     = -1.0e9;
             drops         = 0;
             phase_abs_sum = 0.0;
             phase_maxabs  = 0.0;
@@ -149,11 +163,12 @@ module tb_pll_closed_loop;
             dropped    = settled && (drops != 0);
             misaligned = settled && (phase_abs_sum / WINDOW > PHASE_TOL_NS);
             acquired   = settled && !misaligned;
+            ringing    = settled && (integ_max - integ_min > INTEG_PP_MAX);
 
-            // full spec: lock < 1000 cycles, settles, dither within +/-2
-            // codes, stays locked
+            // full spec: lock < 1000 cycles, settles, dither within +/-62 mV
+            // (old +/-2 6-bit codes), stays locked
             ok = (lock_at > 0) && (lock_at < LOCK_SPEC) && settled
-                 && (code_max - code_min <= 4) && (drops == 0);
+                 && ((code_max - code_min) * V_LSB * 1000.0 <= DITHER_MAX_MV) && (drops == 0);
         end
     endtask
 
@@ -180,9 +195,11 @@ module tb_pll_closed_loop;
 
         // ---------------- Sweep 1: corners x all gain settings ----------------
         $display("");
+        if (ONE_SIDED_KP) $display("Proportional kick: one-sided (late only)");
+        else              $display("Proportional kick: symmetric (+/-Kp)");
         $display("Sweep 1: corners x KP_SEL x KI_SEL");
-        $display("corner | f@mid  | KP KI | lock_at | ferr@lock | ferr_end | dither | drops | |phase| avg/max ns | spec");
-        $display("-------+--------+-------+---------+-----------+----------+--------+-------+----------------------+-----");
+        $display("corner | f@mid  | KP KI | lock_at | ferr@lock | ferr_end | dither  mV | integ p-p | drops | |phase| avg/max ns | spec");
+        $display("-------+--------+-------+---------+-----------+----------+------------+-----------+-------+----------------------+-----");
 
         for (c = 0; c < N_CORNERS; c = c + 1) begin
             tab_idx = c;
@@ -200,7 +217,7 @@ module tb_pll_closed_loop;
                     if (false_lock) false_locks = false_locks + 1;
 
                     flag_str = "";
-                    if (!settled || false_lock || dropped || misaligned) begin
+                    if (!settled || false_lock || dropped || misaligned || ringing) begin
                         if (enforce) begin
                             errors = errors + 1;
                             flag_str = "  <-- ERROR:";
@@ -212,15 +229,17 @@ module tb_pll_closed_loop;
                         if (false_lock) flag_str = {flag_str, " false-lock"};
                         if (dropped)    flag_str = {flag_str, " lock-drop"};
                         if (misaligned) flag_str = {flag_str, " phase"};
+                        if (ringing)    flag_str = {flag_str, " ringing"};
                     end
 
                     if (lock_at > 0) $sformat(lock_str, "%0d", lock_at);
                     else             lock_str = "never";
 
-                    $display("  %s   | %5.1f  |  %0d  %0d | %7s | %+8.2f%% | %+7.3f%% | %6d | %5d |    %5.1f / %5.1f    | %s%0s",
-                             cname, fvco_of(6'd32) / 1e6, kp, ki, lock_str,
+                    $display("  %s   | %5.1f  |  %0d  %0d | %7s | %+8.2f%% | %+7.3f%% | %3d %5.0f  | %9.2f | %5d |    %5.1f / %5.1f    | %s%0s",
+                             cname, fvco_of(7'd64) / 1e6, kp, ki, lock_str,
                              ferr_at_lock * 100.0, ferr_end * 100.0,
-                             code_max - code_min, drops,
+                             code_max - code_min, (code_max - code_min) * V_LSB * 1000.0,
+                             integ_max - integ_min, drops,
                              phase_abs_sum / WINDOW, phase_maxabs,
                              ok ? "ok" : "--", flag_str);
                 end

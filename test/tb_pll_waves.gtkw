@@ -32,12 +32,12 @@ tb_pll_waves.clk_out
 @28
 tb_pll_waves.dut.early
 @8024
-tb_pll_waves.dut.code[5:0]
+tb_pll_waves.dut.code[6:0]
 @20200
 -
 -
 @8024
-tb_pll_waves.dut.u_pi_filter.integ[5:0]
+tb_pll_waves.dut.u_pi_filter.integ[6:0]
 @20200
 -
 -

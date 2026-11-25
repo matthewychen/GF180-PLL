@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-//   clk (10 MHz ref) ──► phase_detector ──► sync (negedge) ──► early ──┬──► pi_filter ──► code[5:0] ──► DAC
+//   clk (10 MHz ref) ──► phase_detector ──► sync (negedge) ──► early ──┬──► pi_filter ──► code[6:0] ──► DAC
 //                             ▲                                       │       ▲ nudge_up/dn
 //                             │                                       └──► lock_detector ──► lock
 //                             │                    freq_acq ──────────────────┘ freq_ok   ▲
@@ -11,13 +11,15 @@
 // Clock domains: everything runs on clk except fb_divider, which runs on vco_clk.
 
 // The synchronizer is clocked on the FALLING edge of clk
-module pll_digital (
+module pll_digital #(
+    parameter ONE_SIDED_KP = 1    // 1: kick only when late (half the dither); 0: symmetric +/-Kp kick
+) (
     input  wire       clk,      // 10 MHz reference
     input  wire       rst_n,    // active-low reset
     input  wire [1:0] kp_sel,   // ui_in[5:4]
     input  wire [1:0] ki_sel,   // ui_in[7:6]
     input  wire       vco_clk,  // from VCO, 80 MHz when locked
-    output wire [5:0] code,     // to DAC
+    output wire [6:0] code,     // to dac7 b[6:0]
     output wire       clk_out,  // VCO / 8, to uo_out[0]
     output wire       lock      // to uo_out[1]
 );
@@ -60,7 +62,7 @@ module pll_digital (
     );
 
     // verilator lint_off PINCONNECTEMPTY
-    pi_filter u_pi_filter (
+    pi_filter #(.ONE_SIDED_KP(ONE_SIDED_KP)) u_pi_filter (
         .clk   (clk),
         .rst_n (rst_n),
         .early (early),

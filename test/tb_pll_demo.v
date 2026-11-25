@@ -2,12 +2,12 @@
 `default_nettype none
 
 // Demo of the whole digital core (pll_digital) in one GTKWave run. The `phase` signal says what is happening:
-//   0 reset held            integrator at 32, LOCK low
+//   0 reset held            integrator at 64, LOCK low
 //   1 acquire               slow-chip (ss) VCO starts at 54.6 MHz; freq_acq nudges the code up, loop locks
-//   2 hold lock             300 cycles of steady state: code dithers +/-1, LOCK stays high
+//   2 hold lock             300 cycles of steady state: code dithers by Kp (one-sided kick), LOCK stays high
 //   3 frequency step        VCO jumps +12 % (like a temperature/supply change): LOCK drops, loop re-locks
 //   4 VCO stops / restarts  no vco_clk: EARLY freezes so LOCK drops, watchdog clears freq_ok; VCO back: re-locks
-//   5 reset while locked    rst_n low: LOCK clears at once, integrator back to 32
+//   5 reset while locked    rst_n low: LOCK clears at once, integrator back to 64
 // Every phase is also checked, so this doubles as a regression test.
 // Run:  test/run_unit_tests.sh pll_demo      View: cd test && gtkwave tb_pll_demo.vcd tb_pll_demo.gtkw
 module tb_pll_demo;
@@ -19,7 +19,7 @@ module tb_pll_demo;
     reg  [1:0] kp_sel  = 2'd0;
     reg  [1:0] ki_sel  = 2'd0;
     reg        vco_clk = 1'b0;
-    wire [5:0] code;
+    wire [6:0] code;
     wire       clk_out;
     wire       lock;
 
@@ -90,7 +90,7 @@ module tb_pll_demo;
         phase = 0;
         repeat (20) @(negedge clk);
         if (lock !== 1'b0)                      fail("LOCK high in reset");
-        if (dut.u_pi_filter.integ !== 6'd32)    fail("integrator not at mid-code in reset");
+        if (dut.u_pi_filter.integ !== 7'd64)    fail("integrator not at mid-code in reset");
         $display("[0] reset: LOCK=%b, integrator=%0d", lock, dut.u_pi_filter.integ);
 
         // ---- 1: acquire from a slow chip ----
@@ -99,7 +99,7 @@ module tb_pll_demo;
         wait_lock(1'b1, 1000);
         if (t_lock < 0) fail("did not lock within 1000 cycles");
         $display("[1] acquire: start %.1f MHz, LOCK after %0d cycles, integrator=%0d, VCO %.1f MHz",
-                 f_of_code(32.0) / 1e6, t_lock, dut.u_pi_filter.integ, f_of_code(dut.u_pi_filter.acc / 64.0) / 1e6);
+                 f_of_code(CODE_MID) / 1e6, t_lock, dut.u_pi_filter.integ, f_of_code(dut.u_pi_filter.acc / ACC_PER_CODE) / 1e6);
 
         // ---- 2: hold lock ----
         phase = 2;
@@ -114,7 +114,7 @@ module tb_pll_demo;
         scale = 1.12;
         wait_lock(1'b0, 100);
         if (t_lock < 0) fail("LOCK did not drop after the frequency step");
-        $display("[3] step: VCO jumped to %.1f MHz, LOCK dropped after %0d cycles", f_of_code(dut.u_pi_filter.acc / 64.0) / 1e6, t_lock);
+        $display("[3] step: VCO jumped to %.1f MHz, LOCK dropped after %0d cycles", f_of_code(dut.u_pi_filter.acc / ACC_PER_CODE) / 1e6, t_lock);
         wait_lock(1'b1, 1000);
         if (t_lock < 0) fail("did not re-lock after the frequency step");
         $display("          re-locked after %0d cycles, integrator now %0d", t_lock, dut.u_pi_filter.integ);
@@ -137,7 +137,7 @@ module tb_pll_demo;
         #1;
         if (lock !== 1'b0) fail("LOCK not cleared by reset");
         @(negedge clk);
-        if (dut.u_pi_filter.integ !== 6'd32) fail("integrator not reloaded to mid-code");
+        if (dut.u_pi_filter.integ !== 7'd64) fail("integrator not reloaded to mid-code");
         $display("[5] reset: LOCK=%b, integrator=%0d", lock, dut.u_pi_filter.integ);
         repeat (20) @(negedge clk);
 

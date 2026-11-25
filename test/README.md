@@ -55,9 +55,19 @@ test/run_unit_tests.sh pll_closed_loop
 cat test/sim_build/unit/tb_pll_closed_loop.log     # the results table
 ```
 
-The DAC and VCO model is in `pll_analog_model.vh`: DAC VCTRL = 1.95 V − 30.9 mV × code, and Matthew's
-simulated 5-point frequency-vs-VCTRL table per corner (linear between points). 80 MHz lands at about code 34
-(tt), 45 (ss) and 20 (ff).
+The DAC and VCO model is in `pll_analog_model.vh`: dac7, VCTRL = 1.95 V − 15.45 mV × code (7-bit code), and
+Matthew's simulated 5-point frequency-vs-VCTRL table per corner (linear between points). 80 MHz lands at about
+code 68 (tt), 90 (ss) and 40 (ff).
+
+Each row also prints the locked code dither in codes and mV (spec: ≤ 124 mV peak to peak, the old ±2 6-bit codes)
+and the integrator's peak-to-peak swing over the last 500 cycles. A swing above 2 codes is flagged as `ringing`.
+
+The testbench runs the shipped one-sided proportional kick. To run the symmetric ±Kp kick instead:
+
+```sh
+iverilog -g2012 -I test -s tb_pll_closed_loop -P tb_pll_closed_loop.ONE_SIDED_KP=0 -o /tmp/cl.vvp \
+    test/tb_pll_closed_loop.v src/*.v && (cd test && vvp -n /tmp/cl.vvp)
+```
 
 A second sweep prints a **capture-range grid**: the tt table scaled by −34 % … +34 %, and whether the loop still
 locks to 80 MHz. `o` = locks, `f` = locks but LOCK rose too early, `x` = never locks.
@@ -66,9 +76,9 @@ CI enforces every corner and a ±30 % capture range for KP_SEL 0–2 with KI_SEL
 80 MHz, and phase-aligned. (At −34 % the tt table can't reach 80 MHz at all, so ±34 % can't be required.)
 Printed but not enforced:
 
-- KP_SEL = 3 (about 16 MHz kicks): false LOCK at ff with KI_SEL = 0.
-- KI_SEL = 3: never acquires at ss / ff, and capture shrinks to about −24 % … +22 %. The integrator
-  overshoots and the loop gets stuck near a 2/3 or 4/3 subharmonic. Open issue.
+- KP_SEL = 3 (about 8 MHz kicks): currently passes, but its dither (139 mV) is over the spec.
+- KI_SEL = 3: too much integral gain for the small one-sided kick. At some corners the integrator rings
+  (LOCK drops) or the loop never acquires, and capture shrinks at KP_SEL 2–3. Open issue.
 
 ## Demo of the digital core (`tb_pll_demo.v`)
 

@@ -1,11 +1,15 @@
 // Behavioral DAC + VCO model shared by the closed-loop testbenches. `include it inside the module.
-// DAC: VCTRL = V_FS - code * V_LSB (Hugh's simulation: 1.95 V full scale, 30.9 mV/code).
+// DAC: VCTRL = V_FS - code * V_LSB (dac7: 7-bit code, 1.95 V full scale, ~15.5 mV/code,
+//      exactly half the dac6 step so code 2n here = code n on dac6).
 // VCO: Matthew's simulated frequency vs VCTRL, 5 points per corner, linear between them.
 //      Frequency FALLS as VCTRL rises, so a higher code gives a higher frequency.
-// Provides: tab_idx (0 tt, 1 ss, 2 ff), scale (extra frequency factor), f_of_code(real code).
+// Provides: tab_idx (0 tt, 1 ss, 2 ff), scale (extra frequency factor), f_of_code(real code),
+//           ACC_PER_CODE (PI accumulator LSBs per output code: code = acc / ACC_PER_CODE).
 
 localparam real V_FS  = 1.95;
-localparam real V_LSB = 0.0309;
+localparam real V_LSB = 0.01545;
+localparam real ACC_PER_CODE = 32.0;   // 12-bit accumulator, code = acc[11:5]
+localparam real CODE_MID = 64.0;       // reset code (mid-scale)
 
 real tab_v [0:4];
 real tab_f [0:14];     // [corner*5 + point]; Icarus 11 has no 2-D real arrays

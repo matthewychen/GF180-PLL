@@ -2,21 +2,23 @@
 `default_nettype none
 
 // Frequency acquisition: counts vco_clk cycles per 32 ref cycles (256 = on target).
-// Off by > TOL_ACQ: nudge the PI integrator 1 code toward target. Within TOL_LOCK: freq_ok (gates LOCK).
+// Off by > TOL_ACQ: nudge the PI integrator 64 LSB (2 codes, ~2.5 %) toward target. Within TOL_LOCK: freq_ok (gates LOCK).
 // Count crosses vco_clk -> clk via toggle handshake; cnt_snap is a false path for STA.
 
 module freq_acq #(
     parameter N_DIV    = 8,    // feedback divide ratio
     parameter WINDOW   = 32,   // reference cycles per measurement
-    parameter TOL_ACQ  = 10,   // counts (~4 % of 256): outside this, steer
+    parameter TOL_ACQ  = 6,    // counts (~2.3 % of 256): outside this, steer. Must stay inside the
+                               // one-sided kick's pull-in range (~3 %, else ff KP 0 locks late) and
+                               // above half a nudge (~1.3 %, else nudges fight the loop: 4 never locks)
     parameter TOL_LOCK = 6     // counts (~2.3 % of 256): inside this, freq_ok. Allows
                                // for phase wander at high Kp (KP_SEL = 3 swings ~+/-5 counts)
 ) (
     input  wire clk,       // 10 MHz reference
     input  wire rst_n,     // active-low reset
     input  wire vco_clk,   // from VCO
-    output reg  nudge_up,  // one clk-cycle pulse: raise integrator by 1 code
-    output reg  nudge_dn,  // one clk-cycle pulse: lower integrator by 1 code
+    output reg  nudge_up,  // one clk-cycle pulse: raise integrator by 2 codes
+    output reg  nudge_dn,  // one clk-cycle pulse: lower integrator by 2 codes
     output reg  freq_ok    // last window was within TOL_LOCK
 );
 

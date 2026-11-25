@@ -15,7 +15,7 @@ module tb_pll_waves;
     reg  [1:0] kp_sel  = 2'd0;
     reg  [1:0] ki_sel  = 2'd0;
     reg        vco_clk = 1'b0;
-    wire [5:0] code;
+    wire [6:0] code;
     wire       clk_out;
     wire       lock;
 
@@ -52,7 +52,7 @@ module tb_pll_waves;
             cycle    = cycle + 1;
             vctrl_v  = V_FS - code * V_LSB;
             fvco_mhz = f_of_code(code) / 1e6;
-            favg_mhz = f_of_code(dut.u_pi_filter.acc / 64.0) / 1e6;
+            favg_mhz = f_of_code(dut.u_pi_filter.acc / ACC_PER_CODE) / 1e6;
             phase_ns = $realtime - t_fb_rise;
             if (phase_ns > 50.0) phase_ns = phase_ns - 100.0;
             if (cycle > RUN_CYCLES - 200) f_sum = f_sum + fvco_mhz;
@@ -86,8 +86,8 @@ module tb_pll_waves;
                 if (lock && lock_at < 0) lock_at = cycle;
             end
 
-            $display("%0s: start %.1f MHz (code 32), LOCK at cycle %0d, mean of last 200 cycles %.2f MHz, integrator code %.1f",
-                     cname, f_of_code(32.0) / 1e6, lock_at, f_sum / 200.0, dut.u_pi_filter.acc / 64.0);
+            $display("%0s: start %.1f MHz (code 64), LOCK at cycle %0d, mean of last 200 cycles %.2f MHz, integrator code %.1f",
+                     cname, f_of_code(CODE_MID) / 1e6, lock_at, f_sum / 200.0, dut.u_pi_filter.acc / ACC_PER_CODE);
             if (lock_at < 0 || lock_at > 1000) errors = errors + 1;
         end
 
