@@ -1,7 +1,7 @@
 magic
 tech gf180mcuD
 magscale 1 10
-timestamp 1795479757
+timestamp 1795589369
 << metal1 >>
 rect -45 4793 23 4886
 rect -231 4072 -96 4149
@@ -13,11 +13,11 @@ rect 267 2963 323 4068
 rect 68 2886 329 2963
 rect -46 2596 23 2686
 use nfet_03v3_HHWFF9  nfet_03v3_HHWFF9_0
-timestamp 0
+timestamp 1795589369
 transform 1 0 -12 0 1 2920
 box -278 -410 278 410
 use pfet_03v3_ET9V5N  pfet_03v3_ET9V5N_0
-timestamp 0
+timestamp 1795589369
 transform 1 0 -12 0 1 4200
 box -278 -770 278 770
 << labels >>
