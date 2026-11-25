@@ -46,7 +46,13 @@ module tb_pll_closed_loop #(
     wire       clk_out;
     wire       lock;
 
-    pll_digital #(.ONE_SIDED_KP(ONE_SIDED_KP)) dut (
+    `ifdef GLS
+        `define DUT_PARAMS
+    `else
+        `define DUT_PARAMS #(.ONE_SIDED_KP(ONE_SIDED_KP))
+    `endif
+
+        pll_digital `DUT_PARAMS dut (
         .clk    (clk),
         .rst_n  (rst_n),
         .kp_sel (kp_sel),
@@ -63,6 +69,18 @@ module tb_pll_closed_loop #(
         fvco_of = f_of_code(c);
     endfunction
 
+`ifdef GLS
+    // Gate-level netlist is flattened: dut.u_pi_filter.acc doesn't exist.
+    // Track the mean DAC code with a slow running average instead. With the
+    // one-sided kick, the mean code already includes the +Kp/2 offset.
+    real code_ema = 64.0;
+    always @(posedge clk) code_ema = code_ema + (code - code_ema) / 64.0;
+
+    function real favg_now(input dummy);
+        favg_now = f_of_code(code_ema);
+    endfunction
+    `define INTEG_NOW (code_ema)
+`else
     // Average VCO frequency, from the PI filter's integrator (12-bit, 5
     // fractional bits). The output code also carries the proportional kick,
     // so it swings +/-Kp codes every cycle even when the loop is locked.
@@ -72,6 +90,8 @@ module tb_pll_closed_loop #(
         favg_now = f_of_code(dut.u_pi_filter.acc / ACC_PER_CODE
                              + (ONE_SIDED_KP ? (1 << kp_sel) / 2.0 : 0.0));
     endfunction
+    `define INTEG_NOW (dut.u_pi_filter.acc / ACC_PER_CODE)
+`endif
 
     // Reference: 10 MHz
     always #50 clk = ~clk;
@@ -109,7 +129,7 @@ module tb_pll_closed_loop #(
                 ferr_sum = ferr_sum + (fvco_of(code) - F_TARGET) / F_TARGET;
                 if (code < code_min) code_min = code;
                 if (code > code_max) code_max = code;
-                integ_now = dut.u_pi_filter.acc / ACC_PER_CODE;
+integ_now = `INTEG_NOW;
                 if (integ_now < integ_min) integ_min = integ_now;
                 if (integ_now > integ_max) integ_max = integ_now;
                 if (!lock) drops = drops + 1;

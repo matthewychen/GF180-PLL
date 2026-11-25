@@ -1,0 +1,8 @@
+{
+  "DESIGN_NAME": "fb_divider",
+  "VERILOG_FILES": ["dir::../src/fb_divider.v"],
+  "CLOCK_PORT": "vco_clk",
+  "CLOCK_PERIOD": 9,
+  "FP_SIZING": "absolute",  
+  "DIE_AREA": [0, 0, 100, 80]
+}
